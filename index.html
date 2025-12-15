@@ -346,9 +346,18 @@
         // --- Firebase Setup ---
         const initFirebase = async () => {
             try {
-                // ▼▼▼ Canvas環境用の設定 ▼▼▼
-                const firebaseConfig = JSON.parse(__firebase_config);
-                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                // ▼▼▼ ユーザー様提供のFirebase設定情報に戻します ▼▼▼
+                const firebaseConfig = {
+                  apiKey: "AIzaSyBYjDRWH0ldsP8WVHa9o8HcfGJ2XF9pdzU",
+                  authDomain: "robot-school-booking.firebaseapp.com",
+                  projectId: "robot-school-booking",
+                  storageBucket: "robot-school-booking.firebasestorage.app",
+                  messagingSenderId: "443474003538",
+                  appId: "1:443474003538:web:e3a17bd422bcee23f6418b"
+                };
+                
+                // Firestoreのデータ保存パスに使用するID
+                appId = 'robot-school-booking-v1'; 
                 // ▲▲▲ 設定ここまで ▲▲▲
 
                 if (firebaseConfig) {
@@ -356,14 +365,11 @@
                     auth = getAuth(app);
                     db = getFirestore(app);
                     
-                    // 1. 認証 (Canvas環境 + 匿名接続)
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth).catch((error) => {
-                             console.warn("Anonymous auth failed or not allowed in console:", error);
-                        });
-                    }
+                    // 1. 認証 (匿名接続)
+                    // ユーザー自身のFirebaseプロジェクトを使用するため、Canvas用のカスタムトークンではなく匿名認証を使用します
+                    await signInAnonymously(auth).catch((error) => {
+                            console.warn("Anonymous auth failed:", error);
+                    });
 
                     // 2. 認証状態監視
                     onAuthStateChanged(auth, (currentUser) => {
