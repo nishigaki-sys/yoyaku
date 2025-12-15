@@ -80,8 +80,6 @@
         </button>
     </div>
 
-    <!-- デモ用設定バー (削除されました) -->
-
     <div class="container mx-auto max-w-2xl p-4 sm:p-6 mt-4 relative">
         
         <!-- === お客様向け予約画面 (User View) === -->
@@ -354,7 +352,7 @@
                 const timesHTML = data.times.map((time, idx) => `
                     <div class="flex items-center gap-2 mb-2">
                         <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="10:00 - 11:30">
-                        <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn" onclick="this.parentElement.remove()">
+                        <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>
@@ -393,24 +391,31 @@
                 `;
                 adminSettingsContainer.appendChild(section);
             });
-
-            // 時間枠追加ボタンのイベント設定
-            document.querySelectorAll('.add-time-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const key = e.target.dataset.key;
-                    const container = document.getElementById(`timesContainer_${key}`);
-                    const div = document.createElement('div');
-                    div.className = "flex items-center gap-2 mb-2";
-                    div.innerHTML = `
-                        <input type="text" name="new_time_${key}[]" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="00:00 - 00:00">
-                        <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
-                        </button>
-                    `;
-                    container.appendChild(div);
-                });
-            });
         }
+
+        // --- 管理画面内の動的イベント処理 (イベント委譲) ---
+        adminSettingsContainer.addEventListener('click', (e) => {
+            // 時間枠追加ボタン
+            if (e.target.closest('.add-time-btn')) {
+                const btn = e.target.closest('.add-time-btn');
+                const key = btn.dataset.key;
+                const container = document.getElementById(`timesContainer_${key}`);
+                const div = document.createElement('div');
+                div.className = "flex items-center gap-2 mb-2";
+                div.innerHTML = `
+                    <input type="text" name="new_time_${key}[]" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="00:00 - 00:00">
+                    <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                    </button>
+                `;
+                container.appendChild(div);
+            }
+            // 時間枠削除ボタン
+            else if (e.target.closest('.remove-time-btn')) {
+                const btn = e.target.closest('.remove-time-btn');
+                btn.parentElement.remove();
+            }
+        });
 
         // --- 管理画面 設定保存処理 ---
         adminSettingsForm.addEventListener('submit', (e) => {
@@ -438,11 +443,14 @@
 
                 // 時間枠
                 const times = [];
-                // 既存の時間枠
+                // 既存の時間枠 (name^=time_)
                 const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
                 timeInputs.forEach(input => { if(input.value) times.push(input.value) });
-                // 新規追加された時間枠
-                const newTimeInputs = document.querySelectorAll(`input[name="new_time_${key}[]"]`);
+                
+                // 新規追加された時間枠 (name属性に[]を含む)
+                // querySelectorAllで[]を含むname属性を検索する場合は属性セレクタを工夫するか、name属性自体で検索
+                // ここではFormDataから取得するのが最も確実だが、動的nameなのでDOM探索で補完
+                const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
                 newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
                 
                 availableSlotsData[key].times = times;
