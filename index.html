@@ -292,7 +292,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp, query, where, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
         // --- Firebase 初期化 ---
@@ -346,18 +346,9 @@
         // --- Firebase Setup ---
         const initFirebase = async () => {
             try {
-                // ▼▼▼ ユーザー様提供のFirebase設定情報 ▼▼▼
-                const firebaseConfig = {
-                  apiKey: "AIzaSyBYjDRWH0ldsP8WVHa9o8HcfGJ2XF9pdzU",
-                  authDomain: "robot-school-booking.firebaseapp.com",
-                  projectId: "robot-school-booking",
-                  storageBucket: "robot-school-booking.firebasestorage.app",
-                  messagingSenderId: "443474003538",
-                  appId: "1:443474003538:web:e3a17bd422bcee23f6418b"
-                };
-                
-                // Firestoreのデータ保存パスに使用するID
-                appId = 'robot-school-booking-v1'; 
+                // ▼▼▼ Canvas環境用の設定 ▼▼▼
+                const firebaseConfig = JSON.parse(__firebase_config);
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
                 // ▲▲▲ 設定ここまで ▲▲▲
 
                 if (firebaseConfig) {
@@ -365,12 +356,14 @@
                     auth = getAuth(app);
                     db = getFirestore(app);
                     
-                    // 1. 認証 (匿名接続)
-                    // 一般ユーザーとしてDBを読むために、まずは匿名で接続します。
-                    // 管理者モードに入る際は別途メールログインを求めます。
-                    await signInAnonymously(auth).catch((error) => {
-                         console.warn("Anonymous auth failed or not allowed in console:", error);
-                    });
+                    // 1. 認証 (Canvas環境 + 匿名接続)
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth).catch((error) => {
+                             console.warn("Anonymous auth failed or not allowed in console:", error);
+                        });
+                    }
 
                     // 2. 認証状態監視
                     onAuthStateChanged(auth, (currentUser) => {
@@ -395,7 +388,6 @@
         // 設定のリアルタイム監視
         const subscribeToSettings = () => {
             // パス: artifacts/{appId}/public/data/settings/main
-            // 修正: パスを偶数階層にするため、'settings'コレクション内の'main'ドキュメントを参照
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             
             onSnapshot(settingsRef, (docSnap) => {
@@ -437,18 +429,38 @@
             }
         };
 
-        // 予約の追加
-        const addBookingToFirestore = async (bookingData) => {
-            if (!db || !user) return;
-            const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+        // 予約の追加（★定員チェック付き）
+        const addBookingToFirestore = async (bookingData, maxCapacity) => {
+            if (!db || !user) return false;
+            
+            // ★追加：定員チェックロジック
             try {
+                // 同じ日時・同じコースの予約を検索
+                // ここでは timeString（例："2024年4月1日 10:00 - 11:00 [コース名]"）がユニークな枠識別子として機能します
+                const q = query(
+                    collection(db, 'artifacts', appId, 'public', 'data', 'bookings'),
+                    where('timeString', '==', bookingData.timeString)
+                );
+                
+                const snapshot = await getDocs(q);
+                const currentCount = snapshot.size;
+
+                if (currentCount >= maxCapacity) {
+                    alert(`申し訳ありません。\n選択された日時「${bookingData.timeString}」は\nすでに満席（${currentCount}名）となっております。\n\n申し訳ございませんが、別の日時を選択してください。`);
+                    return false; // 保存せず中断
+                }
+
+                // 定員以下なら保存実行
+                const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
                 await addDoc(bookingsRef, {
                     ...bookingData,
                     createdAt: serverTimestamp()
                 });
                 return true;
+
             } catch (e) {
                 console.error("Booking error:", e);
+                alert("予約処理中にエラーが発生しました: " + e.message);
                 return false;
             }
         };
@@ -907,8 +919,9 @@
             submitBookingBtn.disabled = true;
             submitBookingBtn.textContent = "予約処理中...";
 
-            // Firestoreへ保存
-            const success = await addBookingToFirestore(bookingData);
+            // Firestoreへ保存（★ここで定員チェックを実行）
+            const capacity = courseData.capacity || 5; // 設定がない場合は5人
+            const success = await addBookingToFirestore(bookingData, capacity);
             
             submitBookingBtn.disabled = false;
             submitBookingBtn.textContent = "この内容で予約を確定する";
@@ -926,8 +939,6 @@
                 // フォームクリア
                 userInfoForm.reset();
                 resetBookingView();
-            } else {
-                alert("予約の保存に失敗しました。時間をおいて再度お試しください。");
             }
         });
 
