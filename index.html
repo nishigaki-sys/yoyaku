@@ -419,14 +419,19 @@
 
         // 設定の保存 (管理者)
         const saveSettingsToFirestore = async (newSettings) => {
-            if (!db || !user) return;
+            if (!db) {
+                throw new Error("データベースに接続されていません");
+            }
+            if (!user) {
+                throw new Error("ログインしていません");
+            }
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings');
             try {
                 await setDoc(settingsRef, newSettings);
                 showToast("設定を保存しました");
             } catch (e) {
                 console.error("Save error:", e);
-                showToast("保存に失敗しました: " + e.message);
+                throw new Error("保存に失敗しました。権限がない可能性があります: " + e.message);
             }
         };
 
@@ -723,40 +728,57 @@
         // Save Settings
         adminSettingsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const formData = new FormData(adminSettingsForm);
-            
-            // 新しい設定オブジェクトを作成
-            const newSettings = {
-                schoolName: formData.get('schoolName') || "渋谷",
-                courses: {}
-            };
+            const submitBtn = document.getElementById('saveSettingsBtn');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "保存中...";
 
-            // 既存キーをベースにデータ構築
-            Object.keys(currentSettings.courses).forEach(key => {
-                const label = currentSettings.courses[key].label; // labelは変更不可とする
+            try {
+                if (!currentSettings || !currentSettings.courses) {
+                    throw new Error("設定データが読み込まれていません。リロードしてください。");
+                }
+
+                const formData = new FormData(adminSettingsForm);
                 
-                const days = [];
-                document.querySelectorAll(`input[name="days_${key}"]:checked`).forEach(cb => {
-                    days.push(parseInt(cb.value));
+                // 新しい設定オブジェクトを作成
+                const newSettings = {
+                    schoolName: formData.get('schoolName') || "渋谷",
+                    courses: {}
+                };
+
+                // 既存キーをベースにデータ構築
+                Object.keys(currentSettings.courses).forEach(key => {
+                    const label = currentSettings.courses[key].label; // labelは変更不可とする
+                    
+                    const days = [];
+                    document.querySelectorAll(`input[name="days_${key}"]:checked`).forEach(cb => {
+                        days.push(parseInt(cb.value));
+                    });
+
+                    const times = [];
+                    const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
+                    timeInputs.forEach(input => { if(input.value) times.push(input.value) });
+                    const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
+                    newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
+
+                    newSettings.courses[key] = {
+                        label: label,
+                        courseName: formData.get(`courseName_${key}`),
+                        price: Number(formData.get(`price_${key}`)),
+                        capacity: Number(formData.get(`capacity_${key}`)),
+                        days: days,
+                        times: times
+                    };
                 });
 
-                const times = [];
-                const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
-                timeInputs.forEach(input => { if(input.value) times.push(input.value) });
-                const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
-                newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
-
-                newSettings.courses[key] = {
-                    label: label,
-                    courseName: formData.get(`courseName_${key}`),
-                    price: Number(formData.get(`price_${key}`)),
-                    capacity: Number(formData.get(`capacity_${key}`)),
-                    days: days,
-                    times: times
-                };
-            });
-
-            await saveSettingsToFirestore(newSettings);
+                await saveSettingsToFirestore(newSettings);
+            } catch (error) {
+                console.error(error);
+                showToast("エラー: " + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
         });
 
 
@@ -768,7 +790,7 @@
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            }, 5000); // エラーメッセージが読めるよう長めに設定
         }
 
         function resetBookingView() {
