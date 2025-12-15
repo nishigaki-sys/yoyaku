@@ -8,26 +8,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"M PLUS Rounded 1c"', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            700: '#0f766e',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         body {
             font-family: 'M PLUS Rounded 1c', sans-serif;
@@ -50,23 +30,21 @@
         }
         /* 選択中の日付のスタイル */
         .selected-day {
-            background-color: #2dd4bf !important;
-            color: white !important;
-            transform: scale(1.1);
-            box-shadow: 0 0 0 3px #ccfbf1;
-            z-index: 10;
+            background-color: #2dd4bf;
+            color: white;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px #14b8a6;
         }
         /* 選択不可な日付のスタイル */
         .disabled {
             color: #cbd5e1;
-            background-color: #f8fafc;
         }
         /* アニメーション用のクラス */
         .fade-in {
             animation: fadeIn 0.5s ease-in-out forwards;
         }
         .slide-in-up {
-            animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: slideInUp 0.5s ease-in-out forwards;
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -77,13 +55,25 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
+        /* adminView は class="hidden" で制御するためここからは除外 */
+        #bookingForm, #timeSlotsContainer, #calendarContainer {
+            display: none; /* 初期状態では非表示 */
+        }
+        
+        /* 管理画面用のスタイル */
+        .admin-section {
+            border-left: 4px solid #475569;
+            padding-left: 1rem;
+            margin-bottom: 2rem;
+        }
+        
         /* ロード中スピナー */
         .loader {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #14b8a6;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
@@ -91,28 +81,13 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        /* スクロールバーのカスタマイズ */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 relative antialiased min-h-screen pb-20">
+<body class="bg-slate-50 text-slate-800 relative">
 
-    <!-- モード切替ボタン -->
-    <div class="fixed top-4 right-4 z-40">
-        <button id="toggleAdminBtn" class="bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-bold hover:bg-slate-700 transition flex items-center gap-2 ring-2 ring-white">
+    <!-- モード切替ボタン (デモ用) -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="toggleAdminBtn" class="bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-bold hover:bg-slate-700 transition flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
@@ -123,141 +98,87 @@
     <div class="container mx-auto max-w-2xl p-4 sm:p-6 mt-4 relative">
         
         <!-- === お客様向け予約画面 (User View) === -->
-        <div id="userView" class="transition-opacity duration-300">
+        <div id="userView">
             <!-- ヘッダー情報 -->
-            <header class="text-center mb-8 fade-in">
-                <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-6 overflow-hidden shadow-lg relative group">
-                    <img src="https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=2070&auto=format&fit=crop" alt="ロボット教室イメージ" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-6">
-                         <p class="text-white font-bold text-lg drop-shadow-md">未来をつくる力を育てよう</p>
+            <header class="text-center mb-8">
+                <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg relative group">
+                    <img src="https://placehold.co/800x400/14b8a6/ffffff?text=ロボットプログラミング教室" alt="教室のイメージ画像" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                         <p class="text-white font-bold">校舎の写真をここに表示</p>
                     </div>
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600 tracking-tight"><span id="schoolNameDisplay">渋谷</span>校 体験レッスン</h1>
-                <p class="mt-3 text-slate-600 font-medium">ロボットを動かす楽しさを体験しよう！<br class="sm:hidden">初心者でも大歓迎です。</p>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600"><span id="schoolNameDisplay">渋谷</span>校 体験レッスン</h1>
+                <p class="mt-2 text-slate-600">未来のクリエイター、集まれ！楽しい体験会へようこそ！</p>
             </header>
 
-            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl min-h-[400px] border border-slate-100 relative overflow-hidden">
+            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg min-h-[400px]">
                 
-                <div id="loadingIndicator" class="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+                <div id="loadingIndicator" class="text-center py-10">
                     <div class="loader"></div>
-                    <p class="text-slate-500 font-bold mt-4">データを読み込んでいます...</p>
+                    <p class="text-slate-500">データを読み込んでいます...</p>
                 </div>
 
                 <div id="mainContent" class="hidden">
                     <!-- ステップ1: 学年選択 -->
-                    <div id="step1" class="fade-in">
-                        <h2 class="text-xl font-bold mb-6 text-center flex items-center justify-center gap-2">
-                            <span class="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-md">1</span>
-                            お子様の学年を選んでください
-                        </h2>
-                        <div id="gradeSelector" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <button data-grade="preschool" class="group relative w-full text-lg font-bold py-6 px-4 bg-white border-2 border-amber-400 text-amber-500 rounded-xl hover:bg-amber-50 transition-all hover:shadow-lg hover:-translate-y-1">
-                                <span class="block text-2xl mb-1">🐣</span>
-                                年長・年中
-                                <span class="absolute top-2 right-2 text-xs bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">はじめて</span>
-                            </button>
-                            <button data-grade="lower" class="group relative w-full text-lg font-bold py-6 px-4 bg-white border-2 border-sky-400 text-sky-500 rounded-xl hover:bg-sky-50 transition-all hover:shadow-lg hover:-translate-y-1">
-                                <span class="block text-2xl mb-1">🚀</span>
-                                小学1〜3年生
-                                <span class="absolute top-2 right-2 text-xs bg-sky-100 text-sky-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">おすすめ</span>
-                            </button>
-                            <button data-grade="upper" class="group relative w-full text-lg font-bold py-6 px-4 bg-white border-2 border-violet-400 text-violet-500 rounded-xl hover:bg-violet-50 transition-all hover:shadow-lg hover:-translate-y-1">
-                                <span class="block text-2xl mb-1">🤖</span>
-                                小学4〜6年生
-                                <span class="absolute top-2 right-2 text-xs bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">応用へ</span>
-                            </button>
+                    <div id="step1">
+                        <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">1</span>お子様の学年を選んでください</h2>
+                        <div id="gradeSelector" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button data-grade="preschool" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-amber-400 text-amber-500 rounded-xl hover:bg-amber-50 transition-transform hover:scale-105">年長・年中</button>
+                            <button data-grade="lower" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-sky-400 text-sky-500 rounded-xl hover:bg-sky-50 transition-transform hover:scale-105">小学1〜3年生</button>
+                            <button data-grade="upper" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-violet-400 text-violet-500 rounded-xl hover:bg-violet-50 transition-transform hover:scale-105">小学4〜6年生</button>
                         </div>
                     </div>
 
                     <!-- カレンダー表示エリア -->
-                    <div id="calendarContainer" class="mt-10 hidden">
-                        <h2 class="text-xl font-bold mb-4 text-center flex items-center justify-center gap-2">
-                            <span class="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-md">2</span>
-                            ご希望の日程を選んでください
-                        </h2>
-                        
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <div class="flex items-center justify-between mb-4 px-2">
-                                <button id="prevMonth" class="p-2 bg-white rounded-lg shadow-sm hover:bg-slate-100 text-slate-600 font-bold transition">
-                                    &lt; 前月
-                                </button>
-                                <h3 id="calendarTitle" class="text-xl font-bold text-slate-700"></h3>
-                                <button id="nextMonth" class="p-2 bg-white rounded-lg shadow-sm hover:bg-slate-100 text-slate-600 font-bold transition">
-                                    翌月 &gt;
-                                </button>
-                            </div>
-                            <div id="calendarGrid" class="grid grid-cols-7 gap-2 text-center mb-2">
-                                <div class="font-bold text-red-500 py-2">日</div>
-                                <div class="font-bold text-slate-500 py-2">月</div>
-                                <div class="font-bold text-slate-500 py-2">火</div>
-                                <div class="font-bold text-slate-500 py-2">水</div>
-                                <div class="font-bold text-slate-500 py-2">木</div>
-                                <div class="font-bold text-slate-500 py-2">金</div>
-                                <div class="font-bold text-blue-500 py-2">土</div>
-                            </div>
-                            <p class="text-xs text-center mt-3 text-slate-500 bg-white inline-block px-3 py-1 rounded-full border border-slate-200 mx-auto block w-fit">
-                                <span class="inline-block w-3 h-3 bg-teal-100 border border-teal-300 rounded-full mr-1 align-middle"></span>
-                                色がついている日が予約可能です
-                            </p>
+                    <div id="calendarContainer" class="mt-8">
+                        <div class="flex items-center justify-between mb-4">
+                            <button id="prevMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&lt;</button>
+                            <h3 id="calendarTitle" class="text-lg font-bold"></h3>
+                            <button id="nextMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&gt;</button>
                         </div>
+                        <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center">
+                            <div class="font-bold text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="font-bold text-blue-500">土</div>
+                        </div>
+                         <p class="text-xs text-center mt-2 text-slate-500"><span class="inline-block w-3 h-3 bg-teal-100 border border-teal-300 rounded-full mr-1"></span>が予約可能な日です</p>
                     </div>
 
                     <!-- 時間選択エリア -->
-                    <div id="timeSlotsContainer" class="mt-8 hidden">
+                    <div id="timeSlotsContainer" class="mt-6">
                         <!-- 時間帯ボタンがここに挿入されます -->
                     </div>
                     
                     <!-- ステップ2 & 3: 情報入力と確認 -->
-                    <div id="bookingForm" class="mt-10 hidden">
-                         <div class="bg-teal-50 p-5 rounded-xl mb-8 border border-teal-100 shadow-sm relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 text-teal-100 opacity-50">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <h3 class="font-bold text-teal-800 text-lg border-b border-teal-200 pb-2 mb-2 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                                </svg>
-                                選択したコース
-                            </h3>
-                            <div class="text-teal-900 space-y-1 relative z-10">
-                                <p><span id="confirmSchoolName" class="font-bold text-lg">渋谷校</span></p>
-                                <p id="selectedSlotInfo" class="font-bold"></p>
-                                <p id="selectedPriceInfo" class="text-xl font-extrabold text-teal-600 mt-2"></p>
-                            </div>
+                    <div id="bookingForm" class="mt-8">
+                         <div class="bg-teal-50 p-4 rounded-xl mb-6 border border-teal-200">
+                            <h3 class="font-bold text-teal-800">ご予約内容</h3>
+                            <p class="mt-1 text-teal-700">
+                                <span id="confirmSchoolName" class="font-bold">渋谷校</span><br>
+                                <span id="selectedSlotInfo"></span><br>
+                                <span id="selectedPriceInfo" class="text-lg font-bold text-teal-600"></span>
+                            </p>
                         </div>
 
-                        <h2 class="text-xl font-bold mb-6 text-center flex items-center justify-center gap-2">
-                            <span class="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-md">3</span>
-                            ご連絡先を入力してください
-                        </h2>
-                        
-                        <form id="userInfoForm" class="space-y-5">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div>
-                                    <label for="parentName" class="block text-sm font-bold text-slate-700 mb-1">保護者様のお名前</label>
-                                    <input type="text" id="parentName" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 outline-none transition" placeholder="山田 太郎">
-                                </div>
-                                <div>
-                                    <label for="childName" class="block text-sm font-bold text-slate-700 mb-1">お子様のお名前 (かな)</label>
-                                    <input type="text" id="childName" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 outline-none transition" placeholder="やまだ はなこ">
-                                </div>
-                            </div>
-                            
+                        <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">2</span>保護者様の情報をご入力ください</h2>
+                        <form id="userInfoForm" class="space-y-4">
                             <div>
-                                <label for="email" class="block text-sm font-bold text-slate-700 mb-1">メールアドレス</label>
-                                <input type="email" id="email" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 outline-none transition" placeholder="example@email.com">
+                                <label for="parentName" class="block text-sm font-medium text-slate-700 mb-1">保護者様のお名前</label>
+                                <input type="text" id="parentName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="山田 太郎">
                             </div>
-                            
                             <div>
-                                <label for="phone" class="block text-sm font-bold text-slate-700 mb-1">電話番号</label>
-                                <input type="tel" id="phone" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400 outline-none transition" placeholder="090-1234-5678">
-                                <p class="text-xs text-slate-400 mt-1">※当日の緊急連絡用に使用します</p>
+                                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
+                                <input type="email" id="email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="example@email.com">
+                            </div>
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">電話番号</label>
+                                <input type="tel" id="phone" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="090-1234-5678">
+                            </div>
+                             <div>
+                                <label for="childName" class="block text-sm font-medium text-slate-700 mb-1">お子様のお名前 (かな)</label>
+                                <input type="text" id="childName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="やまだ はなこ">
                             </div>
                             
-                            <div class="pt-6">
-                                <button type="submit" id="submitBookingBtn" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-all hover:scale-[1.01] shadow-lg shadow-teal-500/30 flex justify-center items-center">
+                            <div class="pt-4">
+                                <button type="submit" id="submitBookingBtn" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-transform hover:scale-102 shadow-lg">
                                     この内容で予約を確定する
                                 </button>
                             </div>
@@ -271,46 +192,34 @@
 
         <!-- === 管理者設定画面 (Admin View) === -->
         <div id="adminView" class="hidden">
-            <header class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b-4 border-slate-300 pb-4 gap-4">
+            <header class="mb-8 flex justify-between items-center border-b-4 border-slate-300 pb-2">
                 <div>
-                    <h1 class="text-3xl font-extrabold text-slate-700 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        校舎管理
-                    </h1>
-                    <p class="mt-1 text-slate-500 text-sm">コース内容や開催日程の編集ができます</p>
+                    <h1 class="text-3xl font-extrabold text-slate-700">校舎管理ページ</h1>
+                    <p class="mt-2 text-slate-600">設定はクラウド(Firebase)に保存されます。</p>
                 </div>
-                <button id="logoutBtn" class="text-sm text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg font-bold border border-red-200 transition flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
+                <button id="logoutBtn" class="text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded font-bold border border-red-200">
                     ログアウト
                 </button>
             </header>
 
-            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200">
+            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-t-8 border-slate-600">
                 <form id="adminSettingsForm">
                     <!-- 校舎設定セクション -->
-                    <div class="mb-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-blue-500 rounded-full"></span>
-                            基本設定
-                        </h3>
+                    <div class="admin-section">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">基本設定</h3>
                         <div>
                             <label class="block text-sm font-bold text-slate-600 mb-1">校舎名</label>
-                            <input type="text" name="schoolName" id="adminSchoolNameInput" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white" placeholder="例: 渋谷">
+                            <input type="text" name="schoolName" id="adminSchoolNameInput" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="例: 渋谷">
                         </div>
                     </div>
 
                     <!-- 管理設定はJavaScriptで動的に生成されます -->
-                    <div id="adminSettingsContainer" class="space-y-8"></div>
+                    <div id="adminSettingsContainer"></div>
 
-                    <div class="sticky bottom-0 bg-white/95 backdrop-blur py-4 border-t border-slate-100 mt-8 flex justify-between items-center z-10">
-                        <span class="text-xs sm:text-sm text-slate-500">※保存すると即座に公開ページへ反映されます</span>
-                        <button type="submit" id="saveSettingsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transform transition hover:-translate-y-1 active:translate-y-0">
-                            設定を保存する
+                    <div class="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-200 mt-6 flex justify-between items-center">
+                        <span class="text-sm text-slate-500">保存すると即座に予約画面へ反映されます</span>
+                        <button type="submit" id="saveSettingsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg transform transition hover:-translate-y-1">
+                            設定を保存
                         </button>
                     </div>
                 </form>
@@ -318,75 +227,65 @@
         </div>
         <!-- End Admin View -->
         
-        <footer class="text-center mt-12 text-sm text-slate-400 pb-20">
-            <p>&copy; 2025 Robot Programming School <span id="footerSchoolName">渋谷</span>校</p>
+        <footer class="text-center mt-8 text-sm text-slate-500 pb-16">
+            <p>&copy; 2025 ロボットプログラミング教室 <span id="footerSchoolName">渋谷</span>校 All Rights Reserved.</p>
         </footer>
     </div>
 
     <!-- 予約完了モーダル -->
-    <div id="successModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center slide-in-up shadow-2xl">
-            <div class="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center slide-in-up">
+            <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h2 class="text-2xl font-bold mb-2 text-slate-800">ご予約ありがとうございます！</h2>
-            <p class="text-slate-600 mb-6 text-sm">体験レッスンの予約が完了しました。<br>当日お待ちしております。</p>
-            
-            <div class="bg-slate-50 p-5 rounded-xl text-left mb-8 border border-slate-100">
-                <h4 class="font-bold text-slate-500 text-xs uppercase tracking-wider mb-3 border-b border-slate-200 pb-2">Booking Details</h4>
-                <div id="modal-summary" class="text-sm space-y-2 text-slate-700"></div>
+            <h2 class="text-2xl font-bold mb-2">ご予約ありがとうございます！</h2>
+            <p class="text-slate-600 mb-4">体験レッスンの予約が完了しました。<br>データはFirebaseに保存されました。</p>
+            <div class="bg-slate-50 p-4 rounded-lg text-left mb-6">
+                <h4 class="font-bold mb-2 border-b border-slate-200 pb-2">予約内容</h4>
+                <div id="modal-summary" class="text-sm space-y-1"></div>
             </div>
-            
-            <button id="closeModal" class="w-full py-3 bg-teal-500 text-white font-bold rounded-xl hover:bg-teal-600 transition shadow-lg shadow-teal-500/30">閉じる</button>
+            <button id="closeModal" class="w-full py-3 bg-teal-500 text-white font-bold rounded-lg hover:bg-teal-600">閉じる</button>
         </div>
     </div>
 
     <!-- 管理者ログインモーダル -->
-    <div id="loginModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full relative slide-in-up">
-            <button id="closeLoginModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1 bg-slate-100 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div id="loginModal" class="fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full relative">
+            <button id="closeLoginModal" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <div class="text-center mb-8">
-                <div class="inline-block p-3 bg-blue-50 rounded-full mb-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
+            <div class="text-center mb-6">
                 <h2 class="text-xl font-bold text-slate-800">管理者ログイン</h2>
-                <p class="text-xs text-slate-500 mt-1">設定を変更するにはログインが必要です</p>
+                <p class="text-sm text-slate-500 mt-1">Firebase Authenticationによる認証</p>
             </div>
             
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label for="adminEmail" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Email</label>
-                    <input type="email" id="adminEmail" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="admin@example.com">
+                    <label for="adminEmail" class="block text-sm font-medium text-slate-700">メールアドレス</label>
+                    <input type="email" id="adminEmail" class="mt-1 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="admin@example.com">
                 </div>
                 <div>
-                    <label for="adminPassword" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">Password</label>
-                    <input type="password" id="adminPassword" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="••••••••">
+                    <label for="adminPassword" class="block text-sm font-medium text-slate-700">パスワード</label>
+                    <input type="password" id="adminPassword" class="mt-1 w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="••••••••">
                 </div>
-                <div id="loginError" class="text-red-500 text-xs hidden bg-red-50 p-2 rounded border border-red-100 flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                    認証に失敗しました
-                </div>
-                <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition shadow-lg">
+                <div id="loginError" class="text-red-500 text-sm hidden">認証に失敗しました。</div>
+                <button type="submit" id="loginSubmitBtn" class="w-full py-3 bg-slate-800 text-white font-bold rounded-lg hover:bg-slate-700 transition">
                     ログイン
                 </button>
             </form>
+            <p class="text-xs text-center text-slate-400 mt-4">
+                ※Firebaseコンソールで登録したユーザーでログインしてください
+            </p>
         </div>
     </div>
 
     <!-- 保存完了トースト通知 -->
-    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-32 opacity-0 transition-all duration-500 z-50 flex items-center gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        <span class="font-bold">設定を保存しました</span>
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        設定を保存し、公開しました。
     </div>
 
 
@@ -395,25 +294,12 @@
     import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // --- Global Config Setup ---
-    // ユーザー提供のConfigを使用。なければデモ用を使用する安全策。
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "AIzaSyBYjDRWH0ldsP8WVHa9o8HcfGJ2XF9pdzU",
-        authDomain: "robot-school-booking.firebaseapp.com",
-        projectId: "robot-school-booking",
-        storageBucket: "robot-school-booking.firebasestorage.app",
-        messagingSenderId: "443474003538",
-        appId: "1:443474003538:web:e3a17bd422bcee23f6418b"
-    };
-
-    // Immersive環境用のAppID設定
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'robot-school-demo-v1';
-
     document.addEventListener('DOMContentLoaded', () => {
         // --- Firebase 初期化 ---
         let auth = null;
         let db = null;
         let user = null;
+        let appId = 'default-app'; // デフォルト
 
         // デフォルトデータ（Firestoreにデータがない場合に使用）
         const defaultData = {
@@ -460,25 +346,31 @@
         // --- Firebase Setup ---
         const initFirebase = async () => {
             try {
+                // ▼▼▼ ユーザー様提供のFirebase設定情報 ▼▼▼
+                const firebaseConfig = {
+                  apiKey: "AIzaSyBYjDRWH0ldsP8WVHa9o8HcfGJ2XF9pdzU",
+                  authDomain: "robot-school-booking.firebaseapp.com",
+                  projectId: "robot-school-booking",
+                  storageBucket: "robot-school-booking.firebasestorage.app",
+                  messagingSenderId: "443474003538",
+                  appId: "1:443474003538:web:e3a17bd422bcee23f6418b"
+                };
+                
+                // Firestoreのデータ保存パスに使用するID
+                appId = 'robot-school-booking-v1'; 
+                // ▲▲▲ 設定ここまで ▲▲▲
+
                 if (firebaseConfig) {
                     const app = initializeApp(firebaseConfig);
                     auth = getAuth(app);
                     db = getFirestore(app);
                     
-                    // 1. 認証 (トークン優先 -> 匿名フォールバック)
-                    const initAuth = async () => {
-                        try {
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                        } catch (err) {
-                            console.error("Auth Error:", err);
-                            // 失敗した場合でも、既存のセッションがあるかもしれないので続行を試みる
-                        }
-                    };
-                    await initAuth();
+                    // 1. 認証 (匿名接続)
+                    // 一般ユーザーとしてDBを読むために、まずは匿名で接続します。
+                    // 管理者モードに入る際は別途メールログインを求めます。
+                    await signInAnonymously(auth).catch((error) => {
+                         console.warn("Anonymous auth failed or not allowed in console:", error);
+                    });
 
                     // 2. 認証状態監視
                     onAuthStateChanged(auth, (currentUser) => {
@@ -502,7 +394,8 @@
 
         // 設定のリアルタイム監視
         const subscribeToSettings = () => {
-            // Path Rule 1: artifacts/{appId}/public/data/{collectionName}/{docId}
+            // パス: artifacts/{appId}/public/data/settings/main
+            // 修正: パスを偶数階層にするため、'settings'コレクション内の'main'ドキュメントを参照
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             
             onSnapshot(settingsRef, (docSnap) => {
@@ -511,8 +404,8 @@
                 } else {
                     // データがない場合はデフォルトを使用
                     currentSettings = defaultData;
-                    // 初回のみ保存 (ユーザーが匿名でも書き込めるルール前提、または管理者がログインした時)
-                    if(user && !user.isAnonymous) {
+                    // 初回のみ保存しておく（ユーザーが管理者なら書き込める）
+                    if(!user.isAnonymous) {
                          setDoc(settingsRef, defaultData).catch(e => console.error("Init save failed", e));
                     }
                 }
@@ -527,23 +420,26 @@
 
         // 設定の保存 (管理者)
         const saveSettingsToFirestore = async (newSettings) => {
-            if (!db || !user) throw new Error("データベース接続エラー");
-            
+            if (!db) {
+                throw new Error("データベースに接続されていません");
+            }
+            if (!user) {
+                throw new Error("ログインしていません");
+            }
+            // パス: artifacts/{appId}/public/data/settings/main
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             try {
                 await setDoc(settingsRef, newSettings);
                 showToast("設定を保存しました");
             } catch (e) {
                 console.error("Save error:", e);
-                throw new Error("保存に失敗しました。権限がない可能性があります。");
+                throw new Error("保存に失敗しました。権限がない可能性があります: " + e.message);
             }
         };
 
         // 予約の追加
         const addBookingToFirestore = async (bookingData) => {
-            if (!db || !user) return false;
-            
-            // Path Rule 1: artifacts/{appId}/public/data/{collectionName}
+            if (!db || !user) return;
             const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
             try {
                 await addDoc(bookingsRef, {
@@ -620,7 +516,7 @@
         let selectedDate = null;
 
         function updateUIBasedOnAuth() {
-            // 匿名でない（=メールログイン）なら管理者とみなす簡易ロジック
+            // 匿名でない（=メールログイン）なら管理者とみなす
             const isEmailUser = user && !user.isAnonymous;
 
             if (isEmailUser) {
@@ -653,7 +549,6 @@
 
         function enterAdminMode() {
             isAdminViewVisible = true;
-            userView.style.display = 'none'; // hidden class + display none for safety
             userView.classList.add('hidden');
             adminView.classList.remove('hidden');
             toggleAdminBtn.classList.replace('bg-slate-800', 'bg-teal-600');
@@ -675,7 +570,6 @@
             isAdminViewVisible = false;
             adminView.classList.add('hidden');
             userView.classList.remove('hidden');
-            userView.style.display = 'block';
             toggleAdminBtn.classList.replace('bg-teal-600', 'bg-slate-800');
             
             const isEmailUser = user && !user.isAnonymous;
@@ -703,11 +597,11 @@
                 if (auth) {
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
-                     // Fallback for demo without real firebase backend connection in some environments
-                     if(email.includes('@') && password.length > 3) {
+                    // Firebase未接続時のフォールバック(デモ用)
+                    if(email && password) {
                          user = { email: email, isAnonymous: false };
                          updateUIBasedOnAuth();
-                     } else { throw new Error("Input required"); }
+                    } else { throw new Error("Input required"); }
                 }
                 loginModal.classList.add('hidden');
                 enterAdminMode();
@@ -725,8 +619,7 @@
         logoutBtn.addEventListener('click', async () => {
             if (auth) {
                 await signOut(auth);
-                // ログアウト後は再度匿名ログインしてデータを読めるようにする
-                await signInAnonymously(auth); 
+                await signInAnonymously(auth); // ログアウト後は匿名に戻る
             } else {
                 user = { isAnonymous: true };
                 updateUIBasedOnAuth();
@@ -747,69 +640,64 @@
             Object.keys(currentSettings.courses).forEach(key => {
                 const data = currentSettings.courses[key];
                 const section = document.createElement('div');
-                section.className = "bg-slate-50 p-5 rounded-xl border border-slate-200 transition hover:border-blue-300";
+                section.className = "admin-section";
                 
-                // Days Checkboxes
+                // Days
                 const daysHTML = [0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
                     const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
                     const isChecked = data.days.includes(dayIdx) ? 'checked' : '';
-                    const colorClass = dayIdx === 0 ? 'text-red-500' : (dayIdx === 6 ? 'text-blue-500' : 'text-slate-700');
                     return `
-                        <label class="inline-flex items-center mr-4 mb-2 cursor-pointer bg-white px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">
-                            <input type="checkbox" name="days_${key}" value="${dayIdx}" ${isChecked} class="form-checkbox h-4 w-4 text-blue-600 rounded focus:ring-blue-500">
-                            <span class="ml-2 ${colorClass} font-bold text-sm">${dayNames[dayIdx]}</span>
+                        <label class="inline-flex items-center mr-3 mb-2 cursor-pointer">
+                            <input type="checkbox" name="days_${key}" value="${dayIdx}" ${isChecked} class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                            <span class="ml-2 text-slate-700">${dayNames[dayIdx]}</span>
                         </label>
                     `;
                 }).join('');
 
-                // Times Inputs
+                // Times
                 const timesHTML = data.times.map((time, idx) => `
-                    <div class="flex items-center gap-2 mb-2 group">
-                        <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-mono" placeholder="10:00 - 11:30">
-                        <button type="button" class="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition remove-time-btn">
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="10:00 - 11:30">
+                        <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>
                 `).join('');
 
                 section.innerHTML = `
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-200 flex justify-between items-center">
-                        ${data.label}
-                        <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">コースID: ${key}</span>
-                    </h3>
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">${data.label} コース設定</h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-500 mb-1">コース名</label>
-                            <input type="text" name="courseName_${key}" value="${data.courseName}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                            <label class="block text-sm font-bold text-slate-600 mb-1">コース名</label>
+                            <input type="text" name="courseName_${key}" value="${data.courseName}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">体験料金 (円)</label>
-                            <input type="number" name="price_${key}" value="${data.price}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">定員 (名)</label>
-                            <input type="number" name="capacity_${key}" value="${data.capacity || 5}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white">
+                            <label class="block text-sm font-bold text-slate-600 mb-1">体験料金 (円)</label>
+                            <input type="number" name="price_${key}" value="${data.price}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         </div>
                     </div>
                     
                     <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-500 mb-2">開催曜日</label>
-                        <div class="flex flex-wrap">
+                        <label class="block text-sm font-bold text-slate-600 mb-1">定員 (人)</label>
+                        <input type="number" name="capacity_${key}" value="${data.capacity || 5}" class="w-24 p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        <span class="text-xs text-slate-400 ml-2">※1枠あたりの最大人数</span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-slate-600 mb-2">開催曜日</label>
+                        <div class="flex flex-wrap bg-slate-50 p-3 rounded border border-slate-200">
                             ${daysHTML}
                         </div>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="block text-xs font-bold text-slate-500 mb-2">開催時間枠</label>
-                        <div id="timesContainer_${key}" class="space-y-2">
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-slate-600 mb-2">開催時間枠</label>
+                        <div id="timesContainer_${key}">
                             ${timesHTML}
                         </div>
-                        <button type="button" class="mt-3 text-sm text-blue-600 font-bold hover:text-blue-800 flex items-center gap-1 add-time-btn px-3 py-1 rounded border border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50 transition" data-key="${key}">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                            </svg>
-                            時間枠を追加
+                        <button type="button" class="mt-2 text-sm text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
+                            ＋ 時間枠を追加
                         </button>
                     </div>
                 `;
@@ -824,10 +712,10 @@
                 const key = btn.dataset.key;
                 const container = document.getElementById(`timesContainer_${key}`);
                 const div = document.createElement('div');
-                div.className = "flex items-center gap-2 mb-2 slide-in-up";
+                div.className = "flex items-center gap-2 mb-2";
                 div.innerHTML = `
-                    <input type="text" name="new_time_${key}[]" class="p-2 border border-slate-300 rounded w-full bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm font-mono" placeholder="例: 10:00 - 11:30">
-                    <button type="button" class="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition remove-time-btn">
+                    <input type="text" name="new_time_${key}[]" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="00:00 - 00:00">
+                    <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                     </button>
                 `;
@@ -845,7 +733,7 @@
             const submitBtn = document.getElementById('saveSettingsBtn');
             const originalBtnText = submitBtn.textContent;
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loader w-5 h-5 border-2 border-white border-t-transparent mr-2 inline-block"></span>保存中...';
+            submitBtn.textContent = "保存中...";
 
             try {
                 if (!currentSettings || !currentSettings.courses) {
@@ -871,9 +759,9 @@
 
                     const times = [];
                     const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
-                    timeInputs.forEach(input => { if(input.value.trim()) times.push(input.value.trim()) });
+                    timeInputs.forEach(input => { if(input.value) times.push(input.value) });
                     const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
-                    newTimeInputs.forEach(input => { if(input.value.trim()) times.push(input.value.trim()) });
+                    newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
 
                     newSettings.courses[key] = {
                         label: label,
@@ -900,30 +788,21 @@
 
         // Helper Functions
         function showToast(msg) {
-            toast.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="font-bold">${msg}</span>
-            `;
-            toast.classList.remove('translate-y-32', 'opacity-0');
+            toast.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
-                toast.classList.add('translate-y-32', 'opacity-0');
-            }, 3000);
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 5000); // エラーメッセージが読めるよう長めに設定
         }
 
         function resetBookingView() {
             gradeSelector.querySelectorAll('button').forEach(btn => {
-                btn.classList.remove('ring-4', 'ring-teal-200', 'bg-teal-50', 'border-teal-500', 'scale-[1.02]', 'shadow-lg');
+                btn.classList.remove('bg-teal-500', 'text-white', 'border-teal-500');
                 btn.classList.add('bg-white');
-                // アイコンのリセットなどはCSSで制御
             });
-            calendarContainer.style.display = 'none'; // DOM flow
-            calendarContainer.classList.add('hidden'); // Tailwind
+            calendarContainer.style.display = 'none';
             timeSlotsContainer.style.display = 'none';
-            timeSlotsContainer.classList.add('hidden');
             bookingForm.style.display = 'none';
-            bookingForm.classList.add('hidden');
             selectedGrade = null;
         }
 
@@ -936,31 +815,21 @@
 
         // Grade Selection
         gradeSelector.addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (btn) {
-                selectedGrade = btn.dataset.grade;
+            if (e.target.tagName === 'BUTTON') {
+                selectedGrade = e.target.dataset.grade;
                 
-                document.querySelectorAll('#gradeSelector button').forEach(b => {
-                    b.classList.remove('ring-4', 'ring-teal-200', 'bg-teal-50', 'border-teal-500', 'scale-[1.02]', 'shadow-lg');
-                    b.classList.add('bg-white');
+                document.querySelectorAll('#gradeSelector button').forEach(btn => {
+                    btn.classList.remove('bg-teal-500', 'text-white', 'border-teal-500');
+                    btn.classList.add('bg-white');
                 });
+                e.target.classList.add('bg-teal-500', 'text-white', 'border-teal-500');
+                e.target.classList.remove('bg-white');
                 
-                // Active State Styling
-                btn.classList.remove('bg-white');
-                btn.classList.add('ring-4', 'ring-teal-200', 'bg-teal-50', 'border-teal-500', 'scale-[1.02]', 'shadow-lg');
-                
-                calendarContainer.classList.remove('hidden');
                 calendarContainer.style.display = 'block';
-                calendarContainer.classList.add('slide-in-up');
-                
-                // Reset subsequent steps
-                timeSlotsContainer.classList.add('hidden');
-                bookingForm.classList.add('hidden');
-                
+                calendarContainer.classList.add('fade-in');
+                timeSlotsContainer.style.display = 'none';
+                bookingForm.style.display = 'none';
                 renderCalendar();
-                
-                // Smooth Scroll
-                calendarContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
 
@@ -995,17 +864,16 @@
                 const time = e.target.dataset.time;
                 const courseData = currentSettings.courses[selectedGrade];
                 
-                const formattedDate = `${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日(${['日','月','火','水','木','金','土'][selectedDate.getDay()]})`;
-                selectedSlotInfo.innerHTML = `${formattedDate} ${time}<br><span class="text-sm font-normal text-slate-600">${courseData.courseName}</span>`;
+                const formattedDate = `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
+                selectedSlotInfo.textContent = `${formattedDate} ${time} [${courseData.courseName}]`;
                 
                 const price = Number(courseData.price).toLocaleString();
                 selectedPriceInfo.textContent = `参加費: ${price}円`;
 
-                bookingForm.classList.remove('hidden');
                 bookingForm.style.display = 'block';
                 bookingForm.classList.add('slide-in-up');
                 
-                bookingForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                bookingForm.scrollIntoView({ behavior: 'smooth' });
             }
         });
         
@@ -1027,7 +895,7 @@
                 grade: selectedGrade,
                 courseName: courseData.courseName,
                 date: selectedDate.toISOString(),
-                timeString: selectedSlotInfo.textContent.split('<')[0], // HTMLタグ除去
+                timeString: selectedSlotInfo.textContent, // 表示用文字列
                 price: price,
                 parentName: parentName,
                 childName: childName,
@@ -1037,7 +905,7 @@
 
             // ボタン非活性
             submitBookingBtn.disabled = true;
-            submitBookingBtn.innerHTML = '<span class="loader w-5 h-5 border-2 border-white border-t-transparent mr-2 inline-block"></span>処理中...';
+            submitBookingBtn.textContent = "予約処理中...";
 
             // Firestoreへ保存
             const success = await addBookingToFirestore(bookingData);
@@ -1047,22 +915,11 @@
 
             if (success) {
                 modalSummary.innerHTML = `
-                    <div class="flex justify-between border-b border-slate-200 pb-2">
-                        <span class="text-slate-500">教室</span>
-                        <span class="font-bold">${currentSettings.schoolName}校</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-200 py-2">
-                        <span class="text-slate-500">日時</span>
-                        <span class="font-bold text-right">${selectedSlotInfo.textContent.split('<')[0]}</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-200 py-2">
-                        <span class="text-slate-500">保護者様</span>
-                        <span class="font-bold">${parentName} 様</span>
-                    </div>
-                    <div class="flex justify-between pt-2">
-                        <span class="text-slate-500">お支払</span>
-                        <span class="font-bold text-teal-600">${Number(price).toLocaleString()}円 (現地決済)</span>
-                    </div>
+                    <p><strong>教室:</strong> ${currentSettings.schoolName}校</p>
+                    <p><strong>日時:</strong> ${selectedSlotInfo.textContent}</p>
+                    <p><strong>金額:</strong> ${Number(price).toLocaleString()}円 (当日現地払い)</p>
+                    <p><strong>保護者様:</strong> ${parentName} 様</p>
+                    <p><strong>お子様:</strong> ${childName} 様</p>
                 `;
                 successModal.classList.remove('hidden');
                 
@@ -1103,7 +960,7 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.textContent = day;
-                cell.classList.add('calendar-day', 'flex', 'items-center', 'justify-center', 'rounded-lg', 'font-medium', 'text-sm');
+                cell.classList.add('calendar-day', 'flex', 'items-center', 'justify-center', 'rounded-full');
                 
                 const currentDateObj = new Date(year, month, day);
                 const courseData = currentSettings.courses[selectedGrade];
@@ -1112,7 +969,7 @@
                 const isAvailableDay = courseData.days.includes(currentDateObj.getDay());
                 
                 if (currentDateObj < today) {
-                      cell.classList.add('disabled', 'opacity-50');
+                      cell.classList.add('disabled');
                 } else if (isAvailableDay) {
                     cell.classList.add('available');
                     cell.dataset.date = currentDateObj.toISOString();
@@ -1127,40 +984,31 @@
         // Render TimeSlots Func
         function renderTimeSlots(date) {
             timeSlotsContainer.innerHTML = '';
-            timeSlotsContainer.classList.remove('hidden');
             timeSlotsContainer.style.display = 'block';
             timeSlotsContainer.classList.add('slide-in-up');
             
             const courseData = currentSettings.courses[selectedGrade];
             
             const title = document.createElement('h3');
-            title.className = "text-xl font-bold mb-6 text-center flex items-center justify-center gap-2";
+            title.className = "text-lg font-bold mb-3 text-center";
             const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日の時間を選択`;
-            title.innerHTML = `<span class="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm shadow-md font-sans">2.5</span>${formattedDate}`;
-            // timeSlotsContainer.appendChild(title); 
-            // ステップ番号がずれるのでタイトルはシンプルに
-            const subTitle = document.createElement('p');
-            subTitle.className = "text-center font-bold text-slate-600 mb-4";
-            subTitle.textContent = `${formattedDate}の開催時間`;
-            timeSlotsContainer.appendChild(subTitle);
+            title.textContent = formattedDate;
+            timeSlotsContainer.appendChild(title);
             
             const buttonContainer = document.createElement('div');
-            buttonContainer.className = "grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto";
+            buttonContainer.className = "flex flex-col items-center gap-3";
 
             if (courseData.times.length === 0) {
-                 const msg = document.createElement('div');
-                 msg.innerHTML = `<p class="text-red-500 font-bold bg-red-50 p-4 rounded-lg text-center">申し訳ありません。<br>この日の空き枠はありません。</p>`;
-                 msg.className = "col-span-full";
+                 const msg = document.createElement('p');
+                 msg.textContent = "この日の空き枠はありません。";
+                 msg.className = "text-red-500 font-bold";
                  buttonContainer.appendChild(msg);
             } else {
                 courseData.times.forEach(time => {
                     const button = document.createElement('button');
-                    button.innerHTML = `
-                        <span class="block text-lg font-extrabold">${time}</span>
-                        <span class="block text-xs font-normal opacity-80">${courseData.courseName}</span>
-                    `;
+                    button.textContent = `${time} [${courseData.courseName}]`;
                     button.dataset.time = time;
-                    button.className = "w-full py-4 px-4 bg-white border-2 border-teal-100 text-teal-600 rounded-xl hover:bg-teal-50 hover:border-teal-400 hover:shadow-md transition-all text-center";
+                    button.className = "w-full max-w-sm font-bold py-3 px-4 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition";
                     buttonContainer.appendChild(button);
                 });
             }
