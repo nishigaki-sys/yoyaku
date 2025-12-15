@@ -55,98 +55,157 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        #bookingForm, #timeSlotsContainer, #calendarContainer {
+        #bookingForm, #timeSlotsContainer, #calendarContainer, #adminView {
             display: none; /* 初期状態では非表示 */
+        }
+        
+        /* 管理画面用のスタイル */
+        .admin-section {
+            border-left: 4px solid #475569;
+            padding-left: 1rem;
+            margin-bottom: 2rem;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800">
+<body class="bg-slate-50 text-slate-800 relative">
 
-    <div class="container mx-auto max-w-2xl p-4 sm:p-6">
+    <!-- モード切替ボタン (デモ用) -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="toggleAdminBtn" class="bg-slate-800 text-white px-4 py-2 rounded-full shadow-lg text-sm font-bold hover:bg-slate-700 transition flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            管理者モード
+        </button>
+    </div>
+
+    <!-- デモ用設定バー (管理者モードでのみ詳細設定が可能だが、校舎名は常に変更可とする) -->
+    <div id="demoSettingsBar" class="bg-slate-800 text-white p-3 text-center text-sm shadow-md sticky top-0 z-40 opacity-95 hover:opacity-100 transition-opacity">
+        <div class="flex items-center justify-center gap-2">
+            <label for="schoolNameInput" class="font-bold whitespace-nowrap">【校舎設定】校舎名:</label>
+            <input type="text" id="schoolNameInput" value="渋谷" class="text-slate-800 px-3 py-1 rounded w-32 sm:w-48 font-bold focus:outline-none focus:ring-2 focus:ring-teal-400" placeholder="校舎名を入力">
+        </div>
+    </div>
+
+    <div class="container mx-auto max-w-2xl p-4 sm:p-6 mt-4 relative">
         
-        <!-- ヘッダー情報 -->
-        <header class="text-center mb-8">
-            <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg">
-                <img src="https://placehold.co/800x400/14b8a6/ffffff?text=ロボットプログラミング教室" alt="教室のイメージ画像" class="w-full h-full object-cover">
-            </div>
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600">〇〇校 体験レッスン</h1>
-            <p class="mt-2 text-slate-600">未来のクリエイター、集まれ！楽しい体験会へようこそ！</p>
-        </header>
-
-        <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
-            
-            <!-- ステップ1: 学年選択 -->
-            <div id="step1">
-                <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">1</span>お子様の学年を選んでください</h2>
-                <div id="gradeSelector" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <button data-grade="preschool" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-amber-400 text-amber-500 rounded-xl hover:bg-amber-50 transition-transform hover:scale-105">年長・年中</button>
-                    <button data-grade="lower" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-sky-400 text-sky-500 rounded-xl hover:bg-sky-50 transition-transform hover:scale-105">小学1〜3年生</button>
-                    <button data-grade="upper" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-violet-400 text-violet-500 rounded-xl hover:bg-violet-50 transition-transform hover:scale-105">小学4〜6年生</button>
+        <!-- === お客様向け予約画面 (User View) === -->
+        <div id="userView">
+            <!-- ヘッダー情報 -->
+            <header class="text-center mb-8">
+                <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg relative group">
+                    <img src="https://placehold.co/800x400/14b8a6/ffffff?text=ロボットプログラミング教室" alt="教室のイメージ画像" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                         <p class="text-white font-bold">校舎の写真をここに表示</p>
+                    </div>
                 </div>
-            </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600"><span id="schoolNameDisplay">渋谷</span>校 体験レッスン</h1>
+                <p class="mt-2 text-slate-600">未来のクリエイター、集まれ！楽しい体験会へようこそ！</p>
+            </header>
 
-            <!-- カレンダー表示エリア -->
-            <div id="calendarContainer" class="mt-8">
-                <div class="flex items-center justify-between mb-4">
-                    <button id="prevMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&lt;</button>
-                    <h3 id="calendarTitle" class="text-lg font-bold"></h3>
-                    <button id="nextMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&gt;</button>
-                </div>
-                <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center">
-                    <!-- 曜日ヘッダー -->
-                    <div class="font-bold text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="font-bold text-blue-500">土</div>
-                    <!-- 日付がここに挿入されます -->
-                </div>
-                 <p class="text-xs text-center mt-2 text-slate-500"><span class="inline-block w-3 h-3 bg-teal-100 border border-teal-300 rounded-full mr-1"></span>が予約可能な日です</p>
-            </div>
-
-            <!-- 時間選択エリア -->
-            <div id="timeSlotsContainer" class="mt-6">
-                <!-- 時間帯ボタンがここに挿入されます -->
-            </div>
-            
-            <!-- ステップ2 & 3: 情報入力と確認 -->
-            <div id="bookingForm" class="mt-8">
-                 <div class="bg-teal-50 p-4 rounded-xl mb-6 border border-teal-200">
-                    <h3 class="font-bold text-teal-800">ご予約内容</h3>
-                    <p id="selectedSlotInfo" class="mt-1 text-teal-700"></p>
+            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                
+                <!-- ステップ1: 学年選択 -->
+                <div id="step1">
+                    <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">1</span>お子様の学年を選んでください</h2>
+                    <div id="gradeSelector" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <button data-grade="preschool" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-amber-400 text-amber-500 rounded-xl hover:bg-amber-50 transition-transform hover:scale-105">年長・年中</button>
+                        <button data-grade="lower" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-sky-400 text-sky-500 rounded-xl hover:bg-sky-50 transition-transform hover:scale-105">小学1〜3年生</button>
+                        <button data-grade="upper" class="w-full text-lg font-bold py-4 px-4 bg-white border-2 border-violet-400 text-violet-500 rounded-xl hover:bg-violet-50 transition-transform hover:scale-105">小学4〜6年生</button>
+                    </div>
                 </div>
 
-                <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">2</span>保護者様の情報をご入力ください</h2>
-                <form id="userInfoForm" class="space-y-4">
-                    <div>
-                        <label for="parentName" class="block text-sm font-medium text-slate-700 mb-1">保護者様のお名前</label>
-                        <input type="text" id="parentName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="山田 太郎">
+                <!-- カレンダー表示エリア -->
+                <div id="calendarContainer" class="mt-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <button id="prevMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&lt;</button>
+                        <h3 id="calendarTitle" class="text-lg font-bold"></h3>
+                        <button id="nextMonth" class="px-3 py-1 bg-slate-200 rounded-md hover:bg-slate-300">&gt;</button>
                     </div>
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
-                        <input type="email" id="email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="example@email.com">
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center">
+                        <div class="font-bold text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="font-bold text-blue-500">土</div>
                     </div>
-                    <div>
-                        <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">電話番号</label>
-                        <input type="tel" id="phone" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="090-1234-5678">
+                     <p class="text-xs text-center mt-2 text-slate-500"><span class="inline-block w-3 h-3 bg-teal-100 border border-teal-300 rounded-full mr-1"></span>が予約可能な日です</p>
+                </div>
+
+                <!-- 時間選択エリア -->
+                <div id="timeSlotsContainer" class="mt-6">
+                    <!-- 時間帯ボタンがここに挿入されます -->
+                </div>
+                
+                <!-- ステップ2 & 3: 情報入力と確認 -->
+                <div id="bookingForm" class="mt-8">
+                     <div class="bg-teal-50 p-4 rounded-xl mb-6 border border-teal-200">
+                        <h3 class="font-bold text-teal-800">ご予約内容</h3>
+                        <p class="mt-1 text-teal-700">
+                            <span id="confirmSchoolName" class="font-bold">渋谷校</span><br>
+                            <span id="selectedSlotInfo"></span><br>
+                            <span id="selectedPriceInfo" class="text-lg font-bold text-teal-600"></span>
+                        </p>
                     </div>
-                     <div>
-                        <label for="childName" class="block text-sm font-medium text-slate-700 mb-1">お子様のお名前 (かな)</label>
-                        <input type="text" id="childName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="やまだ はなこ">
-                    </div>
-                    
-                    <div class="pt-4">
-                        <button type="submit" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-transform hover:scale-102 shadow-lg">
-                            この内容で予約を確定する
+
+                    <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">2</span>保護者様の情報をご入力ください</h2>
+                    <form id="userInfoForm" class="space-y-4">
+                        <div>
+                            <label for="parentName" class="block text-sm font-medium text-slate-700 mb-1">保護者様のお名前</label>
+                            <input type="text" id="parentName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="山田 太郎">
+                        </div>
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
+                            <input type="email" id="email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="example@email.com">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">電話番号</label>
+                            <input type="tel" id="phone" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="090-1234-5678">
+                        </div>
+                         <div>
+                            <label for="childName" class="block text-sm font-medium text-slate-700 mb-1">お子様のお名前 (かな)</label>
+                            <input type="text" id="childName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="やまだ はなこ">
+                        </div>
+                        
+                        <div class="pt-4">
+                            <button type="submit" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-transform hover:scale-102 shadow-lg">
+                                この内容で予約を確定する
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+        <!-- End User View -->
+
+
+        <!-- === 管理者設定画面 (Admin View) === -->
+        <div id="adminView" class="hidden">
+            <header class="mb-8">
+                <h1 class="text-3xl font-extrabold text-slate-700 border-b-4 border-slate-300 pb-2">校舎管理ページ</h1>
+                <p class="mt-2 text-slate-600">体験レッスンやイベントの設定を行います。</p>
+            </header>
+
+            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-t-8 border-slate-600">
+                <form id="adminSettingsForm">
+                    <!-- 管理設定はJavaScriptで動的に生成されます -->
+                    <div id="adminSettingsContainer"></div>
+
+                    <div class="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-200 mt-6 flex justify-between items-center">
+                        <span class="text-sm text-slate-500">変更内容は即座に予約画面に反映されます</span>
+                        <button type="submit" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg transform transition hover:-translate-y-1">
+                            保存して公開
                         </button>
                     </div>
                 </form>
-            </div>
-        </main>
+            </main>
+        </div>
+        <!-- End Admin View -->
         
-        <footer class="text-center mt-8 text-sm text-slate-500">
-            <p>&copy; 2025 ロボットプログラミング教室 All Rights Reserved.</p>
+        <footer class="text-center mt-8 text-sm text-slate-500 pb-16">
+            <p>&copy; 2025 ロボットプログラミング教室 <span id="footerSchoolName">渋谷</span>校 All Rights Reserved.</p>
         </footer>
     </div>
 
-    <!-- 完了モーダル -->
-    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+    <!-- 予約完了モーダル -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full text-center slide-in-up">
             <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -156,17 +215,60 @@
             <h2 class="text-2xl font-bold mb-2">ご予約ありがとうございます！</h2>
             <p class="text-slate-600 mb-4">体験レッスンの予約が完了しました。<br>詳細はご入力いただいたメールアドレスにお送りしました。</p>
             <div class="bg-slate-50 p-4 rounded-lg text-left mb-6">
-                <h4 class="font-bold">予約内容</h4>
-                <p id="modal-summary" class="text-sm"></p>
+                <h4 class="font-bold mb-2 border-b border-slate-200 pb-2">予約内容</h4>
+                <div id="modal-summary" class="text-sm space-y-1"></div>
             </div>
             <button id="closeModal" class="w-full py-3 bg-teal-500 text-white font-bold rounded-lg hover:bg-teal-600">閉じる</button>
         </div>
     </div>
 
+    <!-- 保存完了トースト通知 -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        設定を保存し、公開しました。
+    </div>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
+        // --- データモデル (初期データ) ---
+        // 管理者が編集可能なデータ構造
+        let availableSlotsData = {
+            preschool: { 
+                label: "年長・年中",
+                courseName: "はじめてのロボット体験",
+                price: 1500,
+                days: [6], // 曜日 (0=日, 6=土)
+                times: ["10:00 - 11:00"]
+            },
+            lower: { 
+                label: "小学1〜3年生",
+                courseName: "探検ロボットプログラミング",
+                price: 2200,
+                days: [6, 0], // 土日
+                times: ["13:00 - 14:30", "15:00 - 16:30"]
+            },
+            upper: { 
+                label: "小学4〜6年生",
+                courseName: "AIロボット開発チャレンジ",
+                price: 3300,
+                days: [6, 0], // 土日
+                times: ["13:00 - 14:30", "15:00 - 16:30"]
+            }
+        };
+
         // --- DOM要素の取得 ---
+        const schoolNameInput = document.getElementById('schoolNameInput');
+        const schoolNameDisplay = document.getElementById('schoolNameDisplay');
+        const confirmSchoolName = document.getElementById('confirmSchoolName');
+        const footerSchoolName = document.getElementById('footerSchoolName');
+        const toggleAdminBtn = document.getElementById('toggleAdminBtn');
+        const userView = document.getElementById('userView');
+        const adminView = document.getElementById('adminView');
+        const adminSettingsContainer = document.getElementById('adminSettingsContainer');
+        const adminSettingsForm = document.getElementById('adminSettingsForm');
+        const toast = document.getElementById('toast');
+        
+        // 予約用DOM
         const gradeSelector = document.getElementById('gradeSelector');
         const calendarContainer = document.getElementById('calendarContainer');
         const calendarTitle = document.getElementById('calendarTitle');
@@ -176,45 +278,207 @@
         const timeSlotsContainer = document.getElementById('timeSlotsContainer');
         const bookingForm = document.getElementById('bookingForm');
         const selectedSlotInfo = document.getElementById('selectedSlotInfo');
+        const selectedPriceInfo = document.getElementById('selectedPriceInfo');
         const userInfoForm = document.getElementById('userInfoForm');
         const successModal = document.getElementById('successModal');
         const closeModalBtn = document.getElementById('closeModal');
         const modalSummary = document.getElementById('modal-summary');
 
         // --- 状態管理 ---
+        let isAdminMode = false;
         let current_date = new Date();
-        current_date.setDate(1); // 月の初日に設定
+        current_date.setDate(1); 
         let selectedGrade = null;
         let selectedDate = null;
+        let currentSchoolName = "渋谷";
 
-        // --- ダミーの予約可能データ ---
-        // 実際のシステムではサーバーから取得します
-        const availableSlotsData = {
-            preschool: { // 年長・年中
-                courseName: "はじめてのロボット体験",
-                days: [6], // 曜日 (0=日, 6=土)
-                times: ["10:00 - 11:00"]
-            },
-            lower: { // 小学1〜3年生
-                courseName: "探検ロボットプログラミング",
-                days: [6, 0], // 土日
-                times: ["13:00 - 14:30", "15:00 - 16:30"]
-            },
-            upper: { // 小学4〜6年生
-                courseName: "AIロボット開発チャレンジ",
-                days: [6, 0], // 土日
-                times: ["13:00 - 14:30", "15:00 - 16:30"]
+        // --- モード切替 ---
+        toggleAdminBtn.addEventListener('click', () => {
+            isAdminMode = !isAdminMode;
+            if (isAdminMode) {
+                userView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                toggleAdminBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    予約画面に戻る
+                `;
+                toggleAdminBtn.classList.replace('bg-slate-800', 'bg-teal-600');
+                renderAdminSettings();
+            } else {
+                adminView.classList.add('hidden');
+                userView.classList.remove('hidden');
+                toggleAdminBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    管理者モード
+                `;
+                toggleAdminBtn.classList.replace('bg-teal-600', 'bg-slate-800');
+                
+                // 予約画面をリセット
+                resetBookingView();
             }
-        };
+        });
 
-        // --- イベントリスナー ---
+        // --- 管理画面レンダリング ---
+        function renderAdminSettings() {
+            adminSettingsContainer.innerHTML = '';
+            
+            Object.keys(availableSlotsData).forEach(key => {
+                const data = availableSlotsData[key];
+                const section = document.createElement('div');
+                section.className = "admin-section";
+                
+                // 曜日チェックボックスのHTML生成
+                const daysHTML = [0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
+                    const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
+                    const isChecked = data.days.includes(dayIdx) ? 'checked' : '';
+                    return `
+                        <label class="inline-flex items-center mr-3 mb-2 cursor-pointer">
+                            <input type="checkbox" name="days_${key}" value="${dayIdx}" ${isChecked} class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                            <span class="ml-2 text-slate-700">${dayNames[dayIdx]}</span>
+                        </label>
+                    `;
+                }).join('');
+
+                // 時間枠入力欄のHTML生成
+                const timesHTML = data.times.map((time, idx) => `
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="10:00 - 11:30">
+                        <button type="button" class="text-red-500 hover:text-red-700 remove-time-btn" onclick="this.parentElement.remove()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                `).join('');
+
+                section.innerHTML = `
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">${data.label} コース設定</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-1">コース名</label>
+                            <input type="text" name="courseName_${key}" value="${data.courseName}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-1">体験料金 (円)</label>
+                            <input type="number" name="price_${key}" value="${data.price}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-slate-600 mb-2">開催曜日</label>
+                        <div class="flex flex-wrap bg-slate-50 p-3 rounded border border-slate-200">
+                            ${daysHTML}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-bold text-slate-600 mb-2">開催時間枠</label>
+                        <div id="timesContainer_${key}">
+                            ${timesHTML}
+                        </div>
+                        <button type="button" class="mt-2 text-sm text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
+                            ＋ 時間枠を追加
+                        </button>
+                    </div>
+                `;
+                adminSettingsContainer.appendChild(section);
+            });
+
+            // 時間枠追加ボタンのイベント設定
+            document.querySelectorAll('.add-time-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const key = e.target.dataset.key;
+                    const container = document.getElementById(`timesContainer_${key}`);
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-2 mb-2";
+                    div.innerHTML = `
+                        <input type="text" name="new_time_${key}[]" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="00:00 - 00:00">
+                        <button type="button" class="text-red-500 hover:text-red-700" onclick="this.parentElement.remove()">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            });
+        }
+
+        // --- 管理画面 設定保存処理 ---
+        adminSettingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(adminSettingsForm);
+
+            // データを更新
+            Object.keys(availableSlotsData).forEach(key => {
+                // コース名と金額
+                availableSlotsData[key].courseName = formData.get(`courseName_${key}`);
+                availableSlotsData[key].price = formData.get(`price_${key}`);
+
+                // 曜日
+                const days = [];
+                document.querySelectorAll(`input[name="days_${key}"]:checked`).forEach(cb => {
+                    days.push(parseInt(cb.value));
+                });
+                availableSlotsData[key].days = days;
+
+                // 時間枠
+                const times = [];
+                // 既存の時間枠
+                const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
+                timeInputs.forEach(input => { if(input.value) times.push(input.value) });
+                // 新規追加された時間枠
+                const newTimeInputs = document.querySelectorAll(`input[name="new_time_${key}[]"]`);
+                newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
+                
+                availableSlotsData[key].times = times;
+            });
+
+            // トースト通知表示
+            showToast();
+        });
+
+        function showToast() {
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function resetBookingView() {
+            // 予約画面を初期状態に戻す
+            gradeSelector.querySelectorAll('button').forEach(btn => {
+                btn.classList.remove('bg-teal-500', 'text-white', 'border-teal-500');
+                btn.classList.add('bg-white');
+            });
+            calendarContainer.style.display = 'none';
+            timeSlotsContainer.style.display = 'none';
+            bookingForm.style.display = 'none';
+            selectedGrade = null;
+        }
+
+        // --- 校舎名の同期処理 ---
+        function updateSchoolName(name) {
+            currentSchoolName = name;
+            schoolNameDisplay.textContent = name;
+            confirmSchoolName.textContent = name + '校';
+            footerSchoolName.textContent = name;
+            document.title = name + '校 体験レッスン予約';
+        }
+
+        schoolNameInput.addEventListener('input', (e) => {
+            updateSchoolName(e.target.value);
+        });
+
+        // --- 予約画面のロジック (既存) ---
 
         // 学年選択
         gradeSelector.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
                 selectedGrade = e.target.dataset.grade;
                 
-                // 選択されたボタンのスタイルを更新
                 document.querySelectorAll('#gradeSelector button').forEach(btn => {
                     btn.classList.remove('bg-teal-500', 'text-white', 'border-teal-500');
                     btn.classList.add('bg-white');
@@ -222,11 +486,10 @@
                 e.target.classList.add('bg-teal-500', 'text-white', 'border-teal-500');
                 e.target.classList.remove('bg-white');
                 
-                // カレンダーを表示
                 calendarContainer.style.display = 'block';
                 calendarContainer.classList.add('fade-in');
-                timeSlotsContainer.style.display = 'none'; // 時間選択をリセット
-                bookingForm.style.display = 'none'; // フォームをリセット
+                timeSlotsContainer.style.display = 'none';
+                bookingForm.style.display = 'none';
                 renderCalendar();
             }
         });
@@ -249,7 +512,6 @@
                 const date = target.dataset.date;
                 selectedDate = new Date(date);
                 
-                // 選択された日付のスタイル更新
                 document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected-day'));
                 target.classList.add('selected-day');
 
@@ -261,17 +523,18 @@
         timeSlotsContainer.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
                 const time = e.target.dataset.time;
-                const courseName = availableSlotsData[selectedGrade].courseName;
+                const gradeInfo = availableSlotsData[selectedGrade];
                 
-                // 予約情報を設定
                 const formattedDate = `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
-                selectedSlotInfo.textContent = `${formattedDate} ${time} [${courseName}]`;
+                selectedSlotInfo.textContent = `${formattedDate} ${time} [${gradeInfo.courseName}]`;
                 
-                // フォームを表示
+                // 金額表示の更新
+                const price = Number(gradeInfo.price).toLocaleString();
+                selectedPriceInfo.textContent = `参加費: ${price}円`;
+
                 bookingForm.style.display = 'block';
                 bookingForm.classList.add('slide-in-up');
                 
-                // スムーズにスクロール
                 bookingForm.scrollIntoView({ behavior: 'smooth' });
             }
         });
@@ -279,29 +542,26 @@
         // フォーム送信
         userInfoForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // 実際にはここでサーバーにデータを送信します
             
             const parentName = document.getElementById('parentName').value;
             const childName = document.getElementById('childName').value;
+            const price = availableSlotsData[selectedGrade].price;
 
-            // モーダルに情報を表示
             modalSummary.innerHTML = `
+                <p><strong>教室:</strong> ${currentSchoolName}校</p>
                 <p><strong>日時:</strong> ${selectedSlotInfo.textContent}</p>
+                <p><strong>金額:</strong> ${Number(price).toLocaleString()}円 (当日現地払い)</p>
                 <p><strong>保護者様:</strong> ${parentName} 様</p>
                 <p><strong>お子様:</strong> ${childName} 様</p>
             `;
             successModal.classList.remove('hidden');
         });
 
-        // モーダルを閉じる
         closeModalBtn.addEventListener('click', () => {
              successModal.classList.add('hidden');
         });
 
-
-        // --- レンダリング関数 ---
-
-        // カレンダー描画
+        // --- レンダリング関数 (カレンダーなど) ---
         function renderCalendar() {
             const year = current_date.getFullYear();
             const month = current_date.getMonth();
@@ -315,13 +575,11 @@
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const today = new Date();
 
-            // 月の初日までの空白を埋める
             for (let i = 0; i < firstDayOfMonth; i++) {
                 const emptyCell = document.createElement('div');
                 calendarGrid.appendChild(emptyCell);
             }
 
-            // 日付を生成
             for (let day = 1; day <= daysInMonth; day++) {
                 const cell = document.createElement('div');
                 cell.textContent = day;
@@ -329,11 +587,9 @@
                 
                 const currentDateObj = new Date(year, month, day);
 
-                // 予約可能かチェック
                 const gradeInfo = availableSlotsData[selectedGrade];
                 const isAvailableDay = gradeInfo.days.includes(currentDateObj.getDay());
                 
-                // 過去の日付は選択不可
                 if (currentDateObj < today.setHours(0,0,0,0)) {
                      cell.classList.add('disabled');
                 } else if (isAvailableDay) {
@@ -347,7 +603,6 @@
             }
         }
         
-        // 時間帯描画
         function renderTimeSlots(date) {
             timeSlotsContainer.innerHTML = '';
             timeSlotsContainer.style.display = 'block';
@@ -364,15 +619,24 @@
             const buttonContainer = document.createElement('div');
             buttonContainer.className = "flex flex-col items-center gap-3";
 
-            gradeInfo.times.forEach(time => {
-                const button = document.createElement('button');
-                button.textContent = `${time} [${gradeInfo.courseName}]`;
-                button.dataset.time = time;
-                button.className = "w-full max-w-sm font-bold py-3 px-4 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition";
-                buttonContainer.appendChild(button);
-            });
+            if (gradeInfo.times.length === 0) {
+                 const msg = document.createElement('p');
+                 msg.textContent = "この日の空き枠はありません。";
+                 msg.className = "text-red-500 font-bold";
+                 buttonContainer.appendChild(msg);
+            } else {
+                gradeInfo.times.forEach(time => {
+                    const button = document.createElement('button');
+                    button.textContent = `${time} [${gradeInfo.courseName}]`;
+                    button.dataset.time = time;
+                    button.className = "w-full max-w-sm font-bold py-3 px-4 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition";
+                    buttonContainer.appendChild(button);
+                });
+            }
             timeSlotsContainer.appendChild(buttonContainer);
         }
+        
+        updateSchoolName(currentSchoolName);
     });
     </script>
 </body>
