@@ -80,13 +80,7 @@
         </button>
     </div>
 
-    <!-- デモ用設定バー (管理者モードでのみ詳細設定が可能だが、校舎名は常に変更可とする) -->
-    <div id="demoSettingsBar" class="bg-slate-800 text-white p-3 text-center text-sm shadow-md sticky top-0 z-40 opacity-95 hover:opacity-100 transition-opacity">
-        <div class="flex items-center justify-center gap-2">
-            <label for="schoolNameInput" class="font-bold whitespace-nowrap">【校舎設定】校舎名:</label>
-            <input type="text" id="schoolNameInput" value="渋谷" class="text-slate-800 px-3 py-1 rounded w-32 sm:w-48 font-bold focus:outline-none focus:ring-2 focus:ring-teal-400" placeholder="校舎名を入力">
-        </div>
-    </div>
+    <!-- デモ用設定バー (削除されました) -->
 
     <div class="container mx-auto max-w-2xl p-4 sm:p-6 mt-4 relative">
         
@@ -185,6 +179,15 @@
 
             <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-t-8 border-slate-600">
                 <form id="adminSettingsForm">
+                    <!-- 校舎設定セクション -->
+                    <div class="admin-section">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">基本設定</h3>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-600 mb-1">校舎名</label>
+                            <input type="text" name="schoolName" id="adminSchoolNameInput" value="渋谷" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="例: 渋谷">
+                        </div>
+                    </div>
+
                     <!-- 管理設定はJavaScriptで動的に生成されます -->
                     <div id="adminSettingsContainer"></div>
 
@@ -257,7 +260,6 @@
         };
 
         // --- DOM要素の取得 ---
-        const schoolNameInput = document.getElementById('schoolNameInput');
         const schoolNameDisplay = document.getElementById('schoolNameDisplay');
         const confirmSchoolName = document.getElementById('confirmSchoolName');
         const footerSchoolName = document.getElementById('footerSchoolName');
@@ -266,6 +268,7 @@
         const adminView = document.getElementById('adminView');
         const adminSettingsContainer = document.getElementById('adminSettingsContainer');
         const adminSettingsForm = document.getElementById('adminSettingsForm');
+        const adminSchoolNameInput = document.getElementById('adminSchoolNameInput'); // 管理者用校舎名入力
         const toast = document.getElementById('toast');
         
         // 予約用DOM
@@ -305,6 +308,9 @@
                     予約画面に戻る
                 `;
                 toggleAdminBtn.classList.replace('bg-slate-800', 'bg-teal-600');
+                
+                // 管理画面表示時に現在の校舎名を反映
+                adminSchoolNameInput.value = currentSchoolName;
                 renderAdminSettings();
             } else {
                 adminView.classList.add('hidden');
@@ -410,6 +416,12 @@
         adminSettingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const formData = new FormData(adminSettingsForm);
+            
+            // 校舎名の更新
+            const newSchoolName = formData.get('schoolName');
+            if (newSchoolName) {
+                updateSchoolName(newSchoolName);
+            }
 
             // データを更新
             Object.keys(availableSlotsData).forEach(key => {
@@ -467,10 +479,6 @@
             footerSchoolName.textContent = name;
             document.title = name + '校 体験レッスン予約';
         }
-
-        schoolNameInput.addEventListener('input', (e) => {
-            updateSchoolName(e.target.value);
-        });
 
         // --- 予約画面のロジック (既存) ---
 
