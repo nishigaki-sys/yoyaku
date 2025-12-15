@@ -311,7 +311,8 @@
                     price: 1500,
                     capacity: 5,
                     days: [6],
-                    times: ["10:00 - 11:00"]
+                    times: ["10:00 - 11:00"],
+                    spots: {} // { "2023-10-25": ["10:00 - 12:00"] }
                 },
                 lower: { 
                     label: "小学1〜3年生",
@@ -319,7 +320,8 @@
                     price: 2200,
                     capacity: 8,
                     days: [6, 0],
-                    times: ["13:00 - 14:30", "15:00 - 16:30"]
+                    times: ["13:00 - 14:30", "15:00 - 16:30"],
+                    spots: {}
                 },
                 upper: { 
                     label: "小学4〜6年生",
@@ -327,7 +329,8 @@
                     price: 3300,
                     capacity: 6,
                     days: [6, 0],
-                    times: ["13:00 - 14:30", "15:00 - 16:30"]
+                    times: ["13:00 - 14:30", "15:00 - 16:30"],
+                    spots: {}
                 }
             }
         };
@@ -366,8 +369,6 @@
                     db = getFirestore(app);
                     
                     // 1. 認証 (匿名接続)
-                    // 一般ユーザーとしてDBを読むために、まずは匿名で接続します。
-                    // 管理者モードに入る際は別途メールログインを求めます。
                     await signInAnonymously(auth).catch((error) => {
                          console.warn("Anonymous auth failed or not allowed in console:", error);
                     });
@@ -377,14 +378,12 @@
                         user = currentUser;
                         updateUIBasedOnAuth();
                         if (user) {
-                            // ログインしたら設定を読み込む
                             subscribeToSettings();
                         }
                     });
                 }
             } catch (e) {
                 console.error("Firebase init error:", e);
-                // エラー時はデフォルトデータで表示
                 currentSettings = defaultData;
                 renderApp();
             }
@@ -394,17 +393,19 @@
 
         // 設定のリアルタイム監視
         const subscribeToSettings = () => {
-            // パス: artifacts/{appId}/public/data/settings/main
-            // 修正: パスを偶数階層にするため、'settings'コレクション内の'main'ドキュメントを参照
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
                     currentSettings = docSnap.data();
+                    // データ構造の後方互換性対応 (spotsがない場合に空オブジェクトを追加)
+                    Object.keys(currentSettings.courses).forEach(key => {
+                        if (!currentSettings.courses[key].spots) {
+                            currentSettings.courses[key].spots = {};
+                        }
+                    });
                 } else {
-                    // データがない場合はデフォルトを使用
                     currentSettings = defaultData;
-                    // 初回のみ保存しておく（ユーザーが管理者なら書き込める）
                     if(!user.isAnonymous) {
                          setDoc(settingsRef, defaultData).catch(e => console.error("Init save failed", e));
                     }
@@ -412,7 +413,6 @@
                 renderApp();
             }, (error) => {
                 console.error("Snapshot error:", error);
-                // 権限エラー等で見れない場合もデフォルト表示
                 currentSettings = defaultData;
                 renderApp();
             });
@@ -420,13 +420,9 @@
 
         // 設定の保存 (管理者)
         const saveSettingsToFirestore = async (newSettings) => {
-            if (!db) {
-                throw new Error("データベースに接続されていません");
-            }
-            if (!user) {
-                throw new Error("ログインしていません");
-            }
-            // パス: artifacts/{appId}/public/data/settings/main
+            if (!db) throw new Error("データベースに接続されていません");
+            if (!user) throw new Error("ログインしていません");
+            
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             try {
                 await setDoc(settingsRef, newSettings);
@@ -474,7 +470,6 @@
 
         // --- Event Listeners & Logic ---
 
-        // DOM Elements
         const toggleAdminBtn = document.getElementById('toggleAdminBtn');
         const adminBtnText = document.getElementById('adminBtnText');
         const userView = document.getElementById('userView');
@@ -483,7 +478,6 @@
         const adminSettingsForm = document.getElementById('adminSettingsForm');
         const toast = document.getElementById('toast');
         
-        // Login DOM
         const loginModal = document.getElementById('loginModal');
         const loginForm = document.getElementById('loginForm');
         const loginError = document.getElementById('loginError');
@@ -491,7 +485,6 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         
-        // Booking DOM
         const gradeSelector = document.getElementById('gradeSelector');
         const calendarContainer = document.getElementById('calendarContainer');
         const calendarTitle = document.getElementById('calendarTitle');
@@ -516,9 +509,7 @@
         let selectedDate = null;
 
         function updateUIBasedOnAuth() {
-            // 匿名でない（=メールログイン）なら管理者とみなす
             const isEmailUser = user && !user.isAnonymous;
-
             if (isEmailUser) {
                 if (isAdminViewVisible) {
                     adminBtnText.textContent = "予約画面に戻る";
@@ -527,13 +518,10 @@
                 }
             } else {
                 adminBtnText.textContent = "管理者ログイン";
-                if (isAdminViewVisible) {
-                    exitAdminMode();
-                }
+                if (isAdminViewVisible) exitAdminMode();
             }
         }
 
-        // Toggle Admin Mode
         toggleAdminBtn.addEventListener('click', () => {
             if (isAdminViewVisible) {
                 exitAdminMode();
@@ -552,14 +540,12 @@
             userView.classList.add('hidden');
             adminView.classList.remove('hidden');
             toggleAdminBtn.classList.replace('bg-slate-800', 'bg-teal-600');
-            
             toggleAdminBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
                 <span>予約画面に戻る</span>
             `;
-
             if(currentSettings) {
                 adminSchoolNameInput.value = currentSettings.schoolName;
                 renderAdminSettings();
@@ -571,7 +557,6 @@
             adminView.classList.add('hidden');
             userView.classList.remove('hidden');
             toggleAdminBtn.classList.replace('bg-teal-600', 'bg-slate-800');
-            
             const isEmailUser = user && !user.isAnonymous;
             toggleAdminBtn.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -579,7 +564,6 @@
                 </svg>
                 <span id="adminBtnText">${isEmailUser ? '管理者モード' : '管理者ログイン'}</span>
             `;
-            
             resetBookingView();
         }
 
@@ -597,7 +581,6 @@
                 if (auth) {
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
-                    // Firebase未接続時のフォールバック(デモ用)
                     if(email && password) {
                          user = { email: email, isAnonymous: false };
                          updateUIBasedOnAuth();
@@ -619,7 +602,7 @@
         logoutBtn.addEventListener('click', async () => {
             if (auth) {
                 await signOut(auth);
-                await signInAnonymously(auth); // ログアウト後は匿名に戻る
+                await signInAnonymously(auth); 
             } else {
                 user = { isAnonymous: true };
                 updateUIBasedOnAuth();
@@ -632,17 +615,31 @@
             loginModal.classList.add('hidden');
         });
 
+        // --- Helper for Time Options ---
+        function generateTimeOptions() {
+            const options = [];
+            for (let h = 9; h <= 20; h++) {
+                const hour = h.toString().padStart(2, '0');
+                options.push(`${hour}:00`);
+                options.push(`${hour}:30`);
+            }
+            return options;
+        }
+
         // --- Admin Settings Rendering ---
         function renderAdminSettings() {
             adminSettingsContainer.innerHTML = '';
             if (!currentSettings || !currentSettings.courses) return;
             
+            const timeOptions = generateTimeOptions();
+            const timeOptionsHTML = timeOptions.map(t => `<option value="${t}">${t}</option>`).join('');
+
             Object.keys(currentSettings.courses).forEach(key => {
                 const data = currentSettings.courses[key];
                 const section = document.createElement('div');
                 section.className = "admin-section";
                 
-                // Days
+                // Days (Weekly)
                 const daysHTML = [0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
                     const dayNames = ["日", "月", "火", "水", "木", "金", "土"];
                     const isChecked = data.days.includes(dayIdx) ? 'checked' : '';
@@ -654,7 +651,7 @@
                     `;
                 }).join('');
 
-                // Times
+                // Weekly Times (Existing logic, keep text input for weekly for flexibility, or could be changed to dropdown too)
                 const timesHTML = data.times.map((time, idx) => `
                     <div class="flex items-center gap-2 mb-2">
                         <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="10:00 - 11:30">
@@ -663,6 +660,26 @@
                         </button>
                     </div>
                 `).join('');
+
+                // Spots (Specific Dates)
+                let spotsHTML = '';
+                if (data.spots) {
+                    Object.keys(data.spots).forEach(date => {
+                        data.spots[date].forEach(timeStr => {
+                             spotsHTML += `
+                                <div class="flex items-center gap-2 mb-2 bg-yellow-50 p-2 rounded border border-yellow-200 spot-item">
+                                    <span class="font-bold text-slate-700">${date}</span>
+                                    <span class="text-slate-600">${timeStr}</span>
+                                    <input type="hidden" name="spot_date_${key}[]" value="${date}">
+                                    <input type="hidden" name="spot_time_${key}[]" value="${timeStr}">
+                                    <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn">
+                                        削除
+                                    </button>
+                                </div>
+                             `;
+                        });
+                    });
+                }
 
                 section.innerHTML = `
                     <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">${data.label} コース設定</h3>
@@ -684,21 +701,63 @@
                         <span class="text-xs text-slate-400 ml-2">※1枠あたりの最大人数</span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-bold text-slate-600 mb-2">開催曜日</label>
-                        <div class="flex flex-wrap bg-slate-50 p-3 rounded border border-slate-200">
-                            ${daysHTML}
+                    <!-- 1. 曜日繰り返し設定 -->
+                    <div class="mb-6 border-t border-slate-200 pt-4">
+                        <h4 class="text-md font-bold text-blue-800 mb-3 flex items-center">
+                            <span class="bg-blue-100 p-1 rounded mr-2">定期</span> 曜日繰り返し設定
+                        </h4>
+                        <div class="mb-4 pl-2">
+                            <label class="block text-sm font-bold text-slate-600 mb-2">開催曜日</label>
+                            <div class="flex flex-wrap bg-slate-50 p-3 rounded border border-slate-200">
+                                ${daysHTML}
+                            </div>
+                        </div>
+                        <div class="mb-4 pl-2">
+                            <label class="block text-sm font-bold text-slate-600 mb-2">開催時間 (定期)</label>
+                            <div id="timesContainer_${key}">
+                                ${timesHTML}
+                            </div>
+                            <button type="button" class="mt-2 text-sm text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
+                                ＋ 時間枠を追加
+                            </button>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-sm font-bold text-slate-600 mb-2">開催時間枠</label>
-                        <div id="timesContainer_${key}">
-                            ${timesHTML}
+                    <!-- 2. 個別日程設定 -->
+                    <div class="mb-4 border-t border-slate-200 pt-4">
+                        <h4 class="text-md font-bold text-amber-700 mb-3 flex items-center">
+                             <span class="bg-amber-100 p-1 rounded mr-2">個別</span> 個別日程(スポット)設定
+                        </h4>
+                        
+                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">日付</label>
+                                    <input type="date" id="new_spot_date_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">開始</label>
+                                    <select id="new_spot_start_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
+                                        ${timeOptionsHTML}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">終了</label>
+                                    <select id="new_spot_end_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
+                                        ${timeOptionsHTML}
+                                    </select>
+                                </div>
+                                <div>
+                                    <button type="button" class="w-full bg-amber-500 text-white font-bold py-2 px-4 rounded hover:bg-amber-600 transition add-spot-btn" data-key="${key}">
+                                        追加
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <button type="button" class="mt-2 text-sm text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
-                            ＋ 時間枠を追加
-                        </button>
+
+                        <div id="spotsContainer_${key}" class="pl-2 space-y-2">
+                            ${spotsHTML}
+                        </div>
                     </div>
                 `;
                 adminSettingsContainer.appendChild(section);
@@ -707,6 +766,7 @@
 
         // Admin Event Delegation
         adminSettingsContainer.addEventListener('click', (e) => {
+            // Weekly Time Add
             if (e.target.closest('.add-time-btn')) {
                 const btn = e.target.closest('.add-time-btn');
                 const key = btn.dataset.key;
@@ -721,9 +781,42 @@
                 `;
                 container.appendChild(div);
             }
+            // Weekly Time Remove
             else if (e.target.closest('.remove-time-btn')) {
-                const btn = e.target.closest('.remove-time-btn');
-                btn.parentElement.remove();
+                e.target.closest('.remove-time-btn').parentElement.remove();
+            }
+            // Spot Add
+            else if (e.target.closest('.add-spot-btn')) {
+                const btn = e.target.closest('.add-spot-btn');
+                const key = btn.dataset.key;
+                const dateInput = document.getElementById(`new_spot_date_${key}`);
+                const startInput = document.getElementById(`new_spot_start_${key}`);
+                const endInput = document.getElementById(`new_spot_end_${key}`);
+
+                if (dateInput.value && startInput.value && endInput.value) {
+                    const timeStr = `${startInput.value} - ${endInput.value}`;
+                    const container = document.getElementById(`spotsContainer_${key}`);
+                    const div = document.createElement('div');
+                    div.className = "flex items-center gap-2 mb-2 bg-yellow-50 p-2 rounded border border-yellow-200 spot-item slide-in-up";
+                    div.innerHTML = `
+                        <span class="font-bold text-slate-700">${dateInput.value}</span>
+                        <span class="text-slate-600">${timeStr}</span>
+                        <input type="hidden" name="spot_date_${key}[]" value="${dateInput.value}">
+                        <input type="hidden" name="spot_time_${key}[]" value="${timeStr}">
+                        <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn">
+                            削除
+                        </button>
+                    `;
+                    container.appendChild(div);
+                    // Reset inputs
+                    dateInput.value = '';
+                } else {
+                    alert("日付と時間をすべて選択してください");
+                }
+            }
+            // Spot Remove
+            else if (e.target.closest('.remove-spot-btn')) {
+                e.target.closest('.remove-spot-btn').parentElement.remove();
             }
         });
 
@@ -742,26 +835,40 @@
 
                 const formData = new FormData(adminSettingsForm);
                 
-                // 新しい設定オブジェクトを作成
                 const newSettings = {
                     schoolName: formData.get('schoolName') || "渋谷",
                     courses: {}
                 };
 
-                // 既存キーをベースにデータ構築
                 Object.keys(currentSettings.courses).forEach(key => {
-                    const label = currentSettings.courses[key].label; // labelは変更不可とする
+                    const label = currentSettings.courses[key].label; 
                     
+                    // Days
                     const days = [];
                     document.querySelectorAll(`input[name="days_${key}"]:checked`).forEach(cb => {
                         days.push(parseInt(cb.value));
                     });
 
+                    // Weekly Times
                     const times = [];
                     const timeInputs = document.querySelectorAll(`input[name^="time_${key}_"]`);
                     timeInputs.forEach(input => { if(input.value) times.push(input.value) });
                     const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
                     newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
+
+                    // Spots (Construct Object)
+                    const spots = {};
+                    const spotDates = document.getElementsByName(`spot_date_${key}[]`);
+                    const spotTimes = document.getElementsByName(`spot_time_${key}[]`);
+                    
+                    if (spotDates.length > 0) {
+                        for (let i = 0; i < spotDates.length; i++) {
+                            const d = spotDates[i].value;
+                            const t = spotTimes[i].value;
+                            if (!spots[d]) spots[d] = [];
+                            spots[d].push(t);
+                        }
+                    }
 
                     newSettings.courses[key] = {
                         label: label,
@@ -769,7 +876,8 @@
                         price: Number(formData.get(`price_${key}`)),
                         capacity: Number(formData.get(`capacity_${key}`)),
                         days: days,
-                        times: times
+                        times: times,
+                        spots: spots
                     };
                 });
 
@@ -786,13 +894,12 @@
 
         // --- Booking Logic ---
 
-        // Helper Functions
         function showToast(msg) {
             toast.textContent = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 5000); // エラーメッセージが読めるよう長めに設定
+            }, 5000); 
         }
 
         function resetBookingView() {
@@ -963,16 +1070,27 @@
                 cell.classList.add('calendar-day', 'flex', 'items-center', 'justify-center', 'rounded-full');
                 
                 const currentDateObj = new Date(year, month, day);
+                // ISO String for Map key (YYYY-MM-DD)
+                // Note: toISOString() uses UTC. We need local YYYY-MM-DD.
+                const localDateStr = `${currentDateObj.getFullYear()}-${String(currentDateObj.getMonth()+1).padStart(2,'0')}-${String(currentDateObj.getDate()).padStart(2,'0')}`;
+                
                 const courseData = currentSettings.courses[selectedGrade];
 
-                // 曜日のチェック
-                const isAvailableDay = courseData.days.includes(currentDateObj.getDay());
+                // Check Weekly
+                const isWeeklyAvailable = courseData.days.includes(currentDateObj.getDay());
+                
+                // Check Spots
+                const isSpotAvailable = courseData.spots && courseData.spots[localDateStr] && courseData.spots[localDateStr].length > 0;
                 
                 if (currentDateObj < today) {
                       cell.classList.add('disabled');
-                } else if (isAvailableDay) {
+                } else if (isWeeklyAvailable || isSpotAvailable) {
                     cell.classList.add('available');
                     cell.dataset.date = currentDateObj.toISOString();
+                    // Spotがある場合は色を変えるなどの処理も可能だが、今は共通スタイル
+                    if (isSpotAvailable && !isWeeklyAvailable) {
+                        cell.style.border = "2px solid #fbbf24"; // Amber border for spots
+                    }
                 } else {
                       cell.classList.add('disabled');
                 }
@@ -988,6 +1106,7 @@
             timeSlotsContainer.classList.add('slide-in-up');
             
             const courseData = currentSettings.courses[selectedGrade];
+            const localDateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
             
             const title = document.createElement('h3');
             title.className = "text-lg font-bold mb-3 text-center";
@@ -998,13 +1117,31 @@
             const buttonContainer = document.createElement('div');
             buttonContainer.className = "flex flex-col items-center gap-3";
 
-            if (courseData.times.length === 0) {
+            // Merge times
+            let availableTimes = [];
+            
+            // 1. Weekly Times
+            if (courseData.days.includes(date.getDay())) {
+                availableTimes = [...courseData.times];
+            }
+            
+            // 2. Spot Times
+            if (courseData.spots && courseData.spots[localDateStr]) {
+                // スポット設定がある場合、重複を避けるか、追加するか。
+                // ここでは単純に追加し、Setで重複排除する
+                availableTimes = [...availableTimes, ...courseData.spots[localDateStr]];
+            }
+            
+            // Deduplicate and Sort
+            availableTimes = [...new Set(availableTimes)].sort();
+
+            if (availableTimes.length === 0) {
                  const msg = document.createElement('p');
                  msg.textContent = "この日の空き枠はありません。";
                  msg.className = "text-red-500 font-bold";
                  buttonContainer.appendChild(msg);
             } else {
-                courseData.times.forEach(time => {
+                availableTimes.forEach(time => {
                     const button = document.createElement('button');
                     button.textContent = `${time} [${courseData.courseName}]`;
                     button.dataset.time = time;
