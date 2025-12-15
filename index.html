@@ -55,7 +55,8 @@
             to { transform: translateY(0); opacity: 1; }
         }
 
-        #bookingForm, #timeSlotsContainer, #calendarContainer, #adminView {
+        /* adminView は class="hidden" で制御するためここからは除外 */
+        #bookingForm, #timeSlotsContainer, #calendarContainer {
             display: none; /* 初期状態では非表示 */
         }
         
@@ -448,8 +449,6 @@
                 timeInputs.forEach(input => { if(input.value) times.push(input.value) });
                 
                 // 新規追加された時間枠 (name属性に[]を含む)
-                // querySelectorAllで[]を含むname属性を検索する場合は属性セレクタを工夫するか、name属性自体で検索
-                // ここではFormDataから取得するのが最も確実だが、動的nameなのでDOM探索で補完
                 const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
                 newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
                 
