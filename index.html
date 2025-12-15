@@ -394,8 +394,9 @@
 
         // 設定のリアルタイム監視
         const subscribeToSettings = () => {
-            // パス: artifacts/{appId}/public/data/settings
-            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings');
+            // パス: artifacts/{appId}/public/data/settings/main
+            // 修正: パスを偶数階層にするため、'settings'コレクション内の'main'ドキュメントを参照
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
@@ -425,7 +426,8 @@
             if (!user) {
                 throw new Error("ログインしていません");
             }
-            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings');
+            // パス: artifacts/{appId}/public/data/settings/main
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
             try {
                 await setDoc(settingsRef, newSettings);
                 showToast("設定を保存しました");
