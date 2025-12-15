@@ -172,7 +172,7 @@
         <!-- === 管理者設定画面 (Admin View) === -->
         <div id="adminView" class="hidden">
             <header class="mb-8">
-                <h1 class="text-3xl font-extrabold text-slate-700 border-b-4 border-slate-300 pb-2">校舎管理ページ</h1>
+                <h1 class="text-3xl font-eｖxtrabold text-slate-700 border-b-4 border-slate-300 pb-2">校舎管理ページ</h1>
                 <p class="mt-2 text-slate-600">体験レッスンやイベントの設定を行います。</p>
             </header>
 
@@ -589,9 +589,11 @@
             const firstDayOfMonth = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             for (let i = 0; i < firstDayOfMonth; i++) {
                 const emptyCell = document.createElement('div');
+                emptyCell.classList.add('calendar-day');
                 calendarGrid.appendChild(emptyCell);
             }
 
@@ -605,7 +607,7 @@
                 const gradeInfo = availableSlotsData[selectedGrade];
                 const isAvailableDay = gradeInfo.days.includes(currentDateObj.getDay());
                 
-                if (currentDateObj < today.setHours(0,0,0,0)) {
+                if (currentDateObj < today) {
                      cell.classList.add('disabled');
                 } else if (isAvailableDay) {
                     cell.classList.add('available');
