@@ -362,7 +362,7 @@
                                         </div>
                                         <div class="flex gap-2">
                                             <button type="button" id="cancelContentBtn" class="flex-1 bg-slate-200 text-slate-600 font-bold py-2 rounded hover:bg-slate-300 transition hidden">キャンセル</button>
-                                            <button type="button" id="addContentBtn" class="flex-[2] bg-orange-500 text-white font-bold py-2 rounded hover:bg-orange-600 transition">作成</button>
+                                            <button type="button" id="addContentBtn" class="flex-[2] bg-orange-500 text-white font-bold py-2 rounded hover:bg-orange-600 transition">作成して保存</button>
                                         </div>
                                     </div>
                                 </div>
@@ -397,9 +397,9 @@
 
                     <!-- 保存ボタン (設定タブのみ表示) -->
                     <div id="saveBtnContainer" class="sticky bottom-0 bg-white/90 backdrop-blur pt-4 pb-2 border-t border-slate-200 mt-6 flex justify-between items-center hidden">
-                        <span class="text-sm text-slate-500">※スケジュールは編集時に即時反映されますが、教室・コンテンツ設定は保存が必要です</span>
+                        <span class="text-sm text-slate-500">※教室情報の変更は保存ボタンを押してください</span>
                         <button type="submit" id="saveSettingsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg transform transition hover:-translate-y-1">
-                            設定を保存
+                            教室情報を保存
                         </button>
                     </div>
 
@@ -446,7 +446,7 @@
                             <input type="number" id="modalCapacity" value="5" class="w-full p-2 border border-slate-300 rounded text-sm">
                         </div>
                     </div>
-                    <button type="button" id="addScheduleBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 text-sm">追加する</button>
+                    <button type="button" id="addScheduleBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 text-sm">追加して保存</button>
                 </div>
             </div>
         </div>
@@ -911,10 +911,15 @@
                 btn.addEventListener('click', (e) => editContent(parseInt(e.target.dataset.index)));
             });
             container.querySelectorAll('.delete-content-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
+                btn.addEventListener('click', async (e) => {
                     if(confirm('このコンテンツを削除しますか？\n※既に設定済みのスケジュールには影響しません')) {
                         const idx = parseInt(e.target.dataset.index);
+                        const btn = e.target;
+                        btn.disabled = true;
+                        
                         currentSettings.contents.splice(idx, 1);
+                        await saveSettingsToFirestore(currentSettings); // 自動保存
+                        
                         renderContentsList();
                     }
                 });
@@ -937,7 +942,7 @@
             // 編集モードUIへ切り替え
             editingContentId = content.id;
             document.getElementById('contentFormTitle').textContent = "コンテンツを編集";
-            document.getElementById('addContentBtn').textContent = "更新";
+            document.getElementById('addContentBtn').textContent = "更新して保存";
             document.getElementById('cancelContentBtn').classList.remove('hidden');
         }
 
@@ -953,12 +958,13 @@
             document.querySelectorAll('.grade-check').forEach(c => c.checked = false);
             
             document.getElementById('contentFormTitle').textContent = "新規作成";
-            document.getElementById('addContentBtn').textContent = "作成";
+            document.getElementById('addContentBtn').textContent = "作成して保存";
             document.getElementById('cancelContentBtn').classList.add('hidden');
         }
 
         // コンテンツ追加・更新
-        document.getElementById('addContentBtn').addEventListener('click', () => {
+        document.getElementById('addContentBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('addContentBtn');
             const name = document.getElementById('newContentName').value;
             const type = document.getElementById('newContentType').value;
             const duration = document.getElementById('newContentDuration').value;
@@ -968,6 +974,9 @@
             document.querySelectorAll('.grade-check:checked').forEach(c => grades.push(c.value));
 
             if(name && duration && price) {
+                btn.disabled = true;
+                btn.textContent = "保存中...";
+                
                 const contentData = {
                     id: editingContentId || ('c' + Date.now()),
                     name, type, duration: parseInt(duration), price: parseInt(price), grades
@@ -980,8 +989,12 @@
                     currentSettings.contents.push(contentData);
                 }
                 
+                await saveSettingsToFirestore(currentSettings); // 自動保存
+                
                 renderContentsList();
                 resetContentForm();
+                
+                btn.disabled = false;
             } else {
                 alert("必須項目を入力してください");
             }
@@ -1078,20 +1091,25 @@
                 
                 editingScheduleIndex = idx;
                 document.getElementById('scheduleFormTitle').textContent = "枠を編集";
-                document.getElementById('addScheduleBtn').textContent = "更新する";
+                document.getElementById('addScheduleBtn').textContent = "更新して保存";
                 document.getElementById('cancelScheduleEditBtn').classList.remove('hidden');
             };
 
             list.querySelectorAll('.delete-sched-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(e.target.dataset.idx);
-                    currentSettings.schedule[selectedScheduleDateStr].splice(idx, 1);
-                    if(currentSettings.schedule[selectedScheduleDateStr].length === 0) {
-                        delete currentSettings.schedule[selectedScheduleDateStr];
+                btn.addEventListener('click', async (e) => {
+                    if(confirm("この枠を削除しますか？")) {
+                        const idx = parseInt(e.target.dataset.idx);
+                        currentSettings.schedule[selectedScheduleDateStr].splice(idx, 1);
+                        if(currentSettings.schedule[selectedScheduleDateStr].length === 0) {
+                            delete currentSettings.schedule[selectedScheduleDateStr];
+                        }
+                        
+                        await saveSettingsToFirestore(currentSettings); // 自動保存
+                        
+                        renderDayScheduleList();
+                        renderScheduleCalendar(); 
+                        if(editingScheduleIndex === idx) resetScheduleForm();
                     }
-                    renderDayScheduleList();
-                    renderScheduleCalendar(); 
-                    if(editingScheduleIndex === idx) resetScheduleForm();
                 });
             });
         }
@@ -1104,16 +1122,20 @@
             document.getElementById('modalStartTime').value = "";
             document.getElementById('modalCapacity').value = "5";
             document.getElementById('scheduleFormTitle').textContent = "新規枠を追加";
-            document.getElementById('addScheduleBtn').textContent = "追加する";
+            document.getElementById('addScheduleBtn').textContent = "追加して保存";
             document.getElementById('cancelScheduleEditBtn').classList.add('hidden');
         }
 
-        addScheduleBtn.addEventListener('click', () => {
+        addScheduleBtn.addEventListener('click', async () => {
+            const btn = document.getElementById('addScheduleBtn');
             const contentId = document.getElementById('modalContentSelect').value;
             const startTime = document.getElementById('modalStartTime').value;
             const capacity = document.getElementById('modalCapacity').value;
 
             if (contentId && startTime && capacity) {
+                btn.disabled = true;
+                btn.textContent = "保存中...";
+                
                 if (!currentSettings.schedule[selectedScheduleDateStr]) {
                     currentSettings.schedule[selectedScheduleDateStr] = [];
                 }
@@ -1131,9 +1153,13 @@
                     currentSettings.schedule[selectedScheduleDateStr].push(newData);
                 }
 
+                await saveSettingsToFirestore(currentSettings); // 自動保存
+
                 renderDayScheduleList();
                 renderScheduleCalendar();
                 resetScheduleForm();
+                
+                btn.disabled = false;
             } else {
                 alert("全ての項目を入力してください");
             }
