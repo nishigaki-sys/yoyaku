@@ -104,11 +104,14 @@
                 <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg relative group">
                     <img src="https://placehold.co/800x400/14b8a6/ffffff?text=ロボットプログラミング教室" alt="教室のイメージ画像" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                         <p class="text-white font-bold">校舎の写真をここに表示</p>
+                         <p class="text-white font-bold"><span id="headerSchoolName"></span>校へようこそ</p>
                     </div>
                 </div>
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600"><span id="schoolNameDisplay">渋谷</span>校 体験レッスン</h1>
                 <p class="mt-2 text-slate-600">未来のクリエイター、集まれ！楽しい体験会へようこそ！</p>
+                <div id="schoolInfoDisplay" class="mt-4 text-sm text-slate-500 bg-white p-3 rounded-lg inline-block shadow-sm">
+                    <!-- 住所・電話番号がここに表示されます -->
+                </div>
             </header>
 
             <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg min-h-[400px]">
@@ -192,36 +195,114 @@
 
         <!-- === 管理者設定画面 (Admin View) === -->
         <div id="adminView" class="hidden">
-            <header class="mb-8 flex justify-between items-center border-b-4 border-slate-300 pb-2">
+            <header class="mb-4 flex justify-between items-center border-b-4 border-slate-300 pb-2">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-700">校舎管理ページ</h1>
-                    <p class="mt-2 text-slate-600">設定はクラウド(Firebase)に保存されます。</p>
+                    <p class="mt-1 text-slate-600 text-sm">設定と予約状況の確認ができます</p>
                 </div>
                 <button id="logoutBtn" class="text-sm text-red-600 hover:bg-red-50 px-3 py-2 rounded font-bold border border-red-200">
                     ログアウト
                 </button>
             </header>
 
-            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border-t-8 border-slate-600">
-                <form id="adminSettingsForm">
-                    <!-- 校舎設定セクション -->
-                    <div class="admin-section">
-                        <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">基本設定</h3>
-                        <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-1">校舎名</label>
-                            <input type="text" name="schoolName" id="adminSchoolNameInput" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="例: 渋谷">
+            <!-- タブナビゲーション -->
+            <div class="flex border-b border-slate-200 mb-6">
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none active-tab" data-tab="dashboard">
+                    ダッシュボード
+                </button>
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none" data-tab="school-settings">
+                    教室設定
+                </button>
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none" data-tab="course-settings">
+                    体験会設定
+                </button>
+            </div>
+
+            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200 min-h-[500px]">
+                
+                <!-- 1. ダッシュボード -->
+                <div id="tab-dashboard" class="tab-content">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 border-l-4 border-blue-500 pl-3">予約状況ダッシュボード</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <h3 class="text-sm font-bold text-blue-800 uppercase">総予約数</h3>
+                            <p class="text-3xl font-extrabold text-blue-600 mt-2" id="totalBookingsCount">0</p>
+                            <p class="text-xs text-blue-400 mt-1">全期間の合計</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                            <h3 class="text-sm font-bold text-green-800 uppercase">直近の予約</h3>
+                            <p class="text-xl font-bold text-green-600 mt-2" id="recentBookingDate">-</p>
+                            <p class="text-xs text-green-500 mt-1">最後に追加された予約</p>
                         </div>
                     </div>
 
-                    <!-- 管理設定はJavaScriptで動的に生成されます -->
-                    <div id="adminSettingsContainer"></div>
+                    <h3 class="font-bold text-slate-700 mb-3">今後の体験会日程と予約数</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-3 rounded-l-lg">日程</th>
+                                    <th class="px-4 py-3">時間</th>
+                                    <th class="px-4 py-3">コース</th>
+                                    <th class="px-4 py-3 text-center">予約 / 定員</th>
+                                    <th class="px-4 py-3 rounded-r-lg text-center">状態</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardScheduleList">
+                                <!-- JSで動的に生成 -->
+                                <tr>
+                                    <td colspan="5" class="px-4 py-6 text-center text-slate-400">読み込み中...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-                    <div class="sticky bottom-0 bg-white pt-4 pb-2 border-t border-slate-200 mt-6 flex justify-between items-center">
-                        <span class="text-sm text-slate-500">保存すると即座に予約画面へ反映されます</span>
+                <!-- フォーム開始 (設定保存用) -->
+                <form id="adminSettingsForm">
+                    
+                    <!-- 2. 教室設定 -->
+                    <div id="tab-school-settings" class="tab-content hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-purple-500 pl-3">教室基本情報</h2>
+                        
+                        <div class="space-y-6 max-w-lg">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-1">教室名</label>
+                                <input type="text" name="schoolName" id="adminSchoolNameInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: 渋谷">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-1">教室ID</label>
+                                <input type="text" name="schoolId" id="adminSchoolIdInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500 bg-slate-50" placeholder="例: shibuya01">
+                                <p class="text-xs text-slate-400 mt-1">※システム管理用のIDです。</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-1">住所</label>
+                                <input type="text" name="address" id="adminAddressInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: 東京都渋谷区...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-600 mb-1">電話番号</label>
+                                <input type="text" name="phoneNumber" id="adminPhoneInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: 03-1234-5678">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 体験会設定 -->
+                    <div id="tab-course-settings" class="tab-content hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-orange-500 pl-3">体験会コース設定</h2>
+                        <div id="adminCourseSettingsContainer">
+                            <!-- JSでコース設定フォームを生成 -->
+                        </div>
+                    </div>
+
+                    <!-- 保存ボタン (設定タブのみ表示) -->
+                    <div id="saveBtnContainer" class="sticky bottom-0 bg-white/90 backdrop-blur pt-4 pb-2 border-t border-slate-200 mt-6 flex justify-between items-center hidden">
+                        <span class="text-sm text-slate-500">変更内容は即座に反映されます</span>
                         <button type="submit" id="saveSettingsBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 shadow-lg transform transition hover:-translate-y-1">
                             設定を保存
                         </button>
                     </div>
+
                 </form>
             </main>
         </div>
@@ -292,7 +373,7 @@
     <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
         // --- Firebase 初期化 ---
@@ -304,6 +385,9 @@
         // デフォルトデータ（Firestoreにデータがない場合に使用）
         const defaultData = {
             schoolName: "渋谷",
+            schoolId: "shibuya001",
+            address: "東京都渋谷区神南1-1-1",
+            phoneNumber: "03-1234-5678",
             courses: {
                 preschool: { 
                     label: "年長・年中",
@@ -312,7 +396,7 @@
                     capacity: 5,
                     days: [6],
                     times: ["10:00 - 11:00"],
-                    spots: {} // { "2023-10-25": ["10:00 - 12:00"] }
+                    spots: {} 
                 },
                 lower: { 
                     label: "小学1〜3年生",
@@ -337,6 +421,7 @@
 
         // アプリ内で使用するデータ状態
         let currentSettings = null;
+        let allBookings = []; // 予約データ保持用
 
         // DOM要素
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -344,7 +429,13 @@
         const schoolNameDisplay = document.getElementById('schoolNameDisplay');
         const confirmSchoolName = document.getElementById('confirmSchoolName');
         const footerSchoolName = document.getElementById('footerSchoolName');
+        const schoolInfoDisplay = document.getElementById('schoolInfoDisplay');
+        
+        // Admin Inputs
         const adminSchoolNameInput = document.getElementById('adminSchoolNameInput');
+        const adminSchoolIdInput = document.getElementById('adminSchoolIdInput');
+        const adminAddressInput = document.getElementById('adminAddressInput');
+        const adminPhoneInput = document.getElementById('adminPhoneInput');
         
         // --- Firebase Setup ---
         const initFirebase = async () => {
@@ -359,7 +450,6 @@
                   appId: "1:443474003538:web:e3a17bd422bcee23f6418b"
                 };
                 
-                // Firestoreのデータ保存パスに使用するID
                 appId = 'robot-school-booking-v1'; 
                 // ▲▲▲ 設定ここまで ▲▲▲
 
@@ -368,9 +458,9 @@
                     auth = getAuth(app);
                     db = getFirestore(app);
                     
-                    // 1. 認証 (匿名接続)
+                    // 1. 認証
                     await signInAnonymously(auth).catch((error) => {
-                         console.warn("Anonymous auth failed or not allowed in console:", error);
+                         console.warn("Anonymous auth failed:", error);
                     });
 
                     // 2. 認証状態監視
@@ -379,6 +469,9 @@
                         updateUIBasedOnAuth();
                         if (user) {
                             subscribeToSettings();
+                            // 管理者の場合のみ予約データを購読したいが、簡易実装として常時購読（データ量少前提）
+                            // 本来はSecurity Rulesで保護されるべき
+                            subscribeToBookings(); 
                         }
                     });
                 }
@@ -391,14 +484,17 @@
 
         // --- Firestore Data Logic ---
 
-        // 設定のリアルタイム監視
+        // 設定の監視
         const subscribeToSettings = () => {
             const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'main');
-            
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
                     currentSettings = docSnap.data();
-                    // データ構造の後方互換性対応 (spotsがない場合に空オブジェクトを追加)
+                    // 後方互換性: 新しいフィールドがない場合はデフォルトで埋める
+                    if(!currentSettings.schoolId) currentSettings.schoolId = defaultData.schoolId;
+                    if(!currentSettings.address) currentSettings.address = defaultData.address;
+                    if(!currentSettings.phoneNumber) currentSettings.phoneNumber = defaultData.phoneNumber;
+                    
                     Object.keys(currentSettings.courses).forEach(key => {
                         if (!currentSettings.courses[key].spots) {
                             currentSettings.courses[key].spots = {};
@@ -417,8 +513,25 @@
                 renderApp();
             });
         };
+        
+        // 予約データの監視 (Dashboard用)
+        const subscribeToBookings = () => {
+             // Rule 2違反を避けるため、単純なcollection参照で全取得しクライアント側で処理する
+             const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+             onSnapshot(bookingsRef, (snapshot) => {
+                 allBookings = [];
+                 snapshot.forEach(doc => {
+                     allBookings.push({ id: doc.id, ...doc.data() });
+                 });
+                 if (isAdminViewVisible) {
+                     renderAdminDashboard();
+                 }
+             }, (error) => {
+                 console.error("Booking snapshot error", error);
+             });
+        };
 
-        // 設定の保存 (管理者)
+        // 設定の保存
         const saveSettingsToFirestore = async (newSettings) => {
             if (!db) throw new Error("データベースに接続されていません");
             if (!user) throw new Error("ログインしていません");
@@ -454,8 +567,26 @@
         const renderApp = () => {
             if (!currentSettings) return;
 
-            // 校舎名反映
-            updateSchoolName(currentSettings.schoolName);
+            // ユーザー画面への反映
+            const sName = currentSettings.schoolName || "渋谷";
+            schoolNameDisplay.textContent = sName;
+            document.getElementById('headerSchoolName').textContent = sName;
+            confirmSchoolName.textContent = sName + '校';
+            footerSchoolName.textContent = sName;
+            document.title = sName + '校 体験レッスン予約';
+            
+            // 教室情報の表示
+            const address = currentSettings.address || "";
+            const phone = currentSettings.phoneNumber || "";
+            if (address || phone) {
+                schoolInfoDisplay.innerHTML = `
+                    <p class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>${address}</p>
+                    <p class="flex items-center gap-2 mt-1"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>${phone}</p>
+                `;
+                schoolInfoDisplay.classList.remove('hidden');
+            } else {
+                schoolInfoDisplay.classList.add('hidden');
+            }
             
             // ローディング消去
             loadingIndicator.style.display = 'none';
@@ -463,8 +594,7 @@
 
             // 管理画面が開いていれば再レンダリング
             if (isAdminViewVisible) {
-                adminSchoolNameInput.value = currentSettings.schoolName;
-                renderAdminSettings();
+                renderAdminViewAll();
             }
         };
 
@@ -474,10 +604,14 @@
         const adminBtnText = document.getElementById('adminBtnText');
         const userView = document.getElementById('userView');
         const adminView = document.getElementById('adminView');
-        const adminSettingsContainer = document.getElementById('adminSettingsContainer');
         const adminSettingsForm = document.getElementById('adminSettingsForm');
         const toast = document.getElementById('toast');
         
+        // Admin Tabs
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const saveBtnContainer = document.getElementById('saveBtnContainer');
+
         const loginModal = document.getElementById('loginModal');
         const loginForm = document.getElementById('loginForm');
         const loginError = document.getElementById('loginError');
@@ -485,6 +619,7 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         
+        // Booking Flow
         const gradeSelector = document.getElementById('gradeSelector');
         const calendarContainer = document.getElementById('calendarContainer');
         const calendarTitle = document.getElementById('calendarTitle');
@@ -507,6 +642,7 @@
         current_date.setDate(1); 
         let selectedGrade = null;
         let selectedDate = null;
+        let currentAdminTab = 'dashboard';
 
         function updateUIBasedOnAuth() {
             const isEmailUser = user && !user.isAnonymous;
@@ -541,14 +677,11 @@
             adminView.classList.remove('hidden');
             toggleAdminBtn.classList.replace('bg-slate-800', 'bg-teal-600');
             toggleAdminBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
                 <span>予約画面に戻る</span>
             `;
             if(currentSettings) {
-                adminSchoolNameInput.value = currentSettings.schoolName;
-                renderAdminSettings();
+                renderAdminViewAll();
             }
         }
 
@@ -559,85 +692,181 @@
             toggleAdminBtn.classList.replace('bg-teal-600', 'bg-slate-800');
             const isEmailUser = user && !user.isAnonymous;
             toggleAdminBtn.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 <span id="adminBtnText">${isEmailUser ? '管理者モード' : '管理者ログイン'}</span>
             `;
             resetBookingView();
         }
-
-        // Login Logic
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('adminEmail').value;
-            const password = document.getElementById('adminPassword').value;
-            
-            loginSubmitBtn.disabled = true;
-            loginSubmitBtn.textContent = "認証中...";
-            loginError.classList.add('hidden');
-
-            try {
-                if (auth) {
-                    await signInWithEmailAndPassword(auth, email, password);
+        
+        // Tab Switching Logic
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault(); // Prevent form submit
+                const targetTab = btn.dataset.tab;
+                currentAdminTab = targetTab;
+                
+                // Active Class Update
+                tabBtns.forEach(b => {
+                    b.classList.remove('active-tab', 'border-blue-500', 'text-blue-600');
+                    b.classList.add('border-transparent');
+                });
+                btn.classList.add('active-tab', 'border-blue-500', 'text-blue-600');
+                btn.classList.remove('border-transparent');
+                
+                // Show Content
+                tabContents.forEach(content => content.classList.add('hidden'));
+                document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+                
+                // Show/Hide Save Button
+                if (targetTab === 'dashboard') {
+                    saveBtnContainer.classList.add('hidden');
+                    renderAdminDashboard(); // Refresh dashboard on click
                 } else {
-                    if(email && password) {
-                         user = { email: email, isAnonymous: false };
-                         updateUIBasedOnAuth();
-                    } else { throw new Error("Input required"); }
+                    saveBtnContainer.classList.remove('hidden');
                 }
-                loginModal.classList.add('hidden');
-                enterAdminMode();
-                showToast("ログインしました");
-
-            } catch (error) {
-                console.error("Login failed:", error);
-                loginError.classList.remove('hidden');
-            } finally {
-                loginSubmitBtn.disabled = false;
-                loginSubmitBtn.textContent = "ログイン";
-            }
+            });
         });
 
-        logoutBtn.addEventListener('click', async () => {
-            if (auth) {
-                await signOut(auth);
-                await signInAnonymously(auth); 
+        // --- Admin Render Functions ---
+        
+        function renderAdminViewAll() {
+            // 1. School Settings
+            document.getElementById('adminSchoolNameInput').value = currentSettings.schoolName || "";
+            document.getElementById('adminSchoolIdInput').value = currentSettings.schoolId || "";
+            document.getElementById('adminAddressInput').value = currentSettings.address || "";
+            document.getElementById('adminPhoneInput').value = currentSettings.phoneNumber || "";
+            
+            // 2. Course Settings
+            renderAdminCourseSettings();
+            
+            // 3. Dashboard
+            renderAdminDashboard();
+        }
+        
+        function renderAdminDashboard() {
+            // Summary Stats
+            document.getElementById('totalBookingsCount').textContent = allBookings.length;
+            
+            if (allBookings.length > 0) {
+                 // Sort by createdAt desc
+                 const sorted = [...allBookings].sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+                 const lastDate = sorted[0].createdAt ? new Date(sorted[0].createdAt.seconds * 1000) : new Date();
+                 document.getElementById('recentBookingDate').textContent = `${lastDate.getMonth()+1}/${lastDate.getDate()} ${lastDate.getHours()}:${String(lastDate.getMinutes()).padStart(2,'0')}`;
             } else {
-                user = { isAnonymous: true };
-                updateUIBasedOnAuth();
+                 document.getElementById('recentBookingDate').textContent = "なし";
             }
-            exitAdminMode();
-            showToast("ログアウトしました");
-        });
 
-        closeLoginModal.addEventListener('click', () => {
-            loginModal.classList.add('hidden');
-        });
+            // Schedule Table
+            const tbody = document.getElementById('dashboardScheduleList');
+            tbody.innerHTML = '';
+            
+            // 今後30日間の予定を生成
+            const schedule = [];
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            for(let i=0; i<30; i++) {
+                const d = new Date(today);
+                d.setDate(today.getDate() + i);
+                const localDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                
+                Object.keys(currentSettings.courses).forEach(key => {
+                    const course = currentSettings.courses[key];
+                    let times = [];
+                    
+                    // Weekly
+                    if (course.days.includes(d.getDay())) {
+                        times = [...times, ...course.times];
+                    }
+                    // Spot
+                    if (course.spots && course.spots[localDateStr]) {
+                        times = [...times, ...course.spots[localDateStr]];
+                    }
+                    
+                    // Unique times
+                    times = [...new Set(times)];
+                    
+                    times.forEach(t => {
+                        schedule.push({
+                            dateObj: d,
+                            dateStr: localDateStr,
+                            time: t,
+                            courseName: course.courseName,
+                            grade: key,
+                            capacity: course.capacity
+                        });
+                    });
+                });
+            }
+            
+            // Sort schedule by date, then time
+            schedule.sort((a, b) => {
+                if (a.dateObj - b.dateObj !== 0) return a.dateObj - b.dateObj;
+                return a.time.localeCompare(b.time);
+            });
+            
+            // Render Table Rows
+            if (schedule.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">予定されている体験会はありません</td></tr>`;
+                return;
+            }
 
-        // --- Helper for Time Options ---
-        function generateTimeOptions() {
-            const options = [];
+            schedule.forEach(item => {
+                // Count bookings for this slot
+                // Simple matching: date ISO string prefix match & time match
+                // Note: booking.date is ISOString (UTC). Need careful comparison or store local date string.
+                // In addBooking, we stored ISO string.
+                // To compare accurately: convert booking ISO to local YYYY-MM-DD
+                const bookingCount = allBookings.filter(b => {
+                    if (!b.date) return false;
+                    const bDate = new Date(b.date);
+                    const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
+                    // timeString check: "10:00 - 11:00 [Course]" -> startsWith or includes
+                    return bLocalStr === item.dateStr && b.timeString.includes(item.time) && b.grade === item.grade;
+                }).length;
+
+                const row = document.createElement('tr');
+                row.className = "border-b border-slate-100 hover:bg-slate-50";
+                
+                // Status Color
+                let statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">受付中</span>';
+                if (bookingCount >= item.capacity) {
+                    statusBadge = '<span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-0.5 rounded">満席</span>';
+                } else if (bookingCount > 0) {
+                     statusBadge = '<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">予約あり</span>';
+                }
+
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-medium text-slate-900">${item.dateStr}</td>
+                    <td class="px-4 py-3">${item.time}</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${item.courseName}</td>
+                    <td class="px-4 py-3 text-center font-bold">
+                        <span class="${bookingCount > 0 ? 'text-blue-600' : 'text-slate-400'}">${bookingCount}</span>
+                        <span class="text-slate-400 mx-1">/</span>
+                        <span>${item.capacity}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center">${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function renderAdminCourseSettings() {
+            const container = document.getElementById('adminCourseSettingsContainer');
+            container.innerHTML = '';
+            
+            const timeOptions = [];
             for (let h = 9; h <= 20; h++) {
                 const hour = h.toString().padStart(2, '0');
-                options.push(`${hour}:00`);
-                options.push(`${hour}:30`);
+                timeOptions.push(`${hour}:00`);
+                timeOptions.push(`${hour}:30`);
             }
-            return options;
-        }
-
-        // --- Admin Settings Rendering ---
-        function renderAdminSettings() {
-            adminSettingsContainer.innerHTML = '';
-            if (!currentSettings || !currentSettings.courses) return;
-            
-            const timeOptions = generateTimeOptions();
             const timeOptionsHTML = timeOptions.map(t => `<option value="${t}">${t}</option>`).join('');
 
             Object.keys(currentSettings.courses).forEach(key => {
                 const data = currentSettings.courses[key];
                 const section = document.createElement('div');
-                section.className = "admin-section";
+                section.className = "admin-section bg-slate-50 p-4 rounded-lg border border-slate-200";
                 
                 // Days (Weekly)
                 const daysHTML = [0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
@@ -651,7 +880,7 @@
                     `;
                 }).join('');
 
-                // Weekly Times (Existing logic, keep text input for weekly for flexibility, or could be changed to dropdown too)
+                // Weekly Times
                 const timesHTML = data.times.map((time, idx) => `
                     <div class="flex items-center gap-2 mb-2">
                         <input type="text" name="time_${key}_${idx}" value="${time}" class="p-2 border border-slate-300 rounded w-full max-w-xs" placeholder="10:00 - 11:30">
@@ -661,20 +890,18 @@
                     </div>
                 `).join('');
 
-                // Spots (Specific Dates)
+                // Spots
                 let spotsHTML = '';
                 if (data.spots) {
                     Object.keys(data.spots).forEach(date => {
                         data.spots[date].forEach(timeStr => {
                              spotsHTML += `
-                                <div class="flex items-center gap-2 mb-2 bg-yellow-50 p-2 rounded border border-yellow-200 spot-item">
-                                    <span class="font-bold text-slate-700">${date}</span>
-                                    <span class="text-slate-600">${timeStr}</span>
+                                <div class="flex items-center gap-2 mb-2 bg-yellow-100 p-2 rounded border border-yellow-200 spot-item">
+                                    <span class="font-bold text-slate-700 text-xs">${date}</span>
+                                    <span class="text-slate-600 text-xs">${timeStr}</span>
                                     <input type="hidden" name="spot_date_${key}[]" value="${date}">
                                     <input type="hidden" name="spot_time_${key}[]" value="${timeStr}">
-                                    <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn">
-                                        削除
-                                    </button>
+                                    <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn text-xs font-bold">削除</button>
                                 </div>
                              `;
                         });
@@ -682,90 +909,74 @@
                 }
 
                 section.innerHTML = `
-                    <h3 class="text-xl font-bold text-slate-800 mb-4 bg-slate-100 p-2 rounded">${data.label} コース設定</h3>
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 bg-white p-2 rounded border border-slate-100 shadow-sm flex justify-between items-center">
+                        ${data.label}
+                        <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">ID: ${key}</span>
+                    </h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-bold text-slate-600 mb-1">コース名</label>
-                            <input type="text" name="courseName_${key}" value="${data.courseName}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block text-sm font-bold text-slate-600 mb-1">体験料金 (円)</label>
-                            <input type="number" name="price_${key}" value="${data.price}" class="w-full p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-xs font-bold text-slate-500 mb-1">体験会名</label>
+                            <input type="text" name="courseName_${key}" value="${data.courseName}" class="w-full p-2 border border-slate-300 rounded text-sm">
                         </div>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-bold text-slate-600 mb-1">定員 (人)</label>
-                        <input type="number" name="capacity_${key}" value="${data.capacity || 5}" class="w-24 p-2 border border-slate-300 rounded focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
-                        <span class="text-xs text-slate-400 ml-2">※1枠あたりの最大人数</span>
-                    </div>
-
-                    <!-- 1. 曜日繰り返し設定 -->
-                    <div class="mb-6 border-t border-slate-200 pt-4">
-                        <h4 class="text-md font-bold text-blue-800 mb-3 flex items-center">
-                            <span class="bg-blue-100 p-1 rounded mr-2">定期</span> 曜日繰り返し設定
-                        </h4>
-                        <div class="mb-4 pl-2">
-                            <label class="block text-sm font-bold text-slate-600 mb-2">開催曜日</label>
-                            <div class="flex flex-wrap bg-slate-50 p-3 rounded border border-slate-200">
-                                ${daysHTML}
+                        <div class="flex gap-2">
+                             <div class="flex-1">
+                                <label class="block text-xs font-bold text-slate-500 mb-1">金額(円)</label>
+                                <input type="number" name="price_${key}" value="${data.price}" class="w-full p-2 border border-slate-300 rounded text-sm">
                             </div>
-                        </div>
-                        <div class="mb-4 pl-2">
-                            <label class="block text-sm font-bold text-slate-600 mb-2">開催時間 (定期)</label>
-                            <div id="timesContainer_${key}">
-                                ${timesHTML}
+                            <div class="w-20">
+                                <label class="block text-xs font-bold text-slate-500 mb-1">定員</label>
+                                <input type="number" name="capacity_${key}" value="${data.capacity || 5}" class="w-full p-2 border border-slate-300 rounded text-sm">
                             </div>
-                            <button type="button" class="mt-2 text-sm text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
-                                ＋ 時間枠を追加
-                            </button>
                         </div>
                     </div>
 
-                    <!-- 2. 個別日程設定 -->
-                    <div class="mb-4 border-t border-slate-200 pt-4">
-                        <h4 class="text-md font-bold text-amber-700 mb-3 flex items-center">
-                             <span class="bg-amber-100 p-1 rounded mr-2">個別</span> 個別日程(スポット)設定
-                        </h4>
+                    <!-- 曜日繰り返し -->
+                    <div class="mb-4 pt-2 border-t border-slate-200">
+                        <label class="block text-xs font-bold text-blue-600 mb-2">定期開催 (曜日)</label>
+                        <div class="flex flex-wrap mb-2">
+                            ${daysHTML}
+                        </div>
+                        <div id="timesContainer_${key}" class="text-sm">
+                            ${timesHTML}
+                        </div>
+                        <button type="button" class="mt-1 text-xs text-blue-600 font-bold hover:underline flex items-center add-time-btn" data-key="${key}">
+                            ＋ 定期枠を追加
+                        </button>
+                    </div>
+
+                    <!-- 個別日程 -->
+                    <div class="pt-2 border-t border-slate-200">
+                        <label class="block text-xs font-bold text-amber-600 mb-2">個別日程 (スポット)</label>
                         
-                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-4">
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1">日付</label>
-                                    <input type="date" id="new_spot_date_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1">開始</label>
-                                    <select id="new_spot_start_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
-                                        ${timeOptionsHTML}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-slate-600 mb-1">終了</label>
-                                    <select id="new_spot_end_${key}" class="w-full p-2 border border-slate-300 rounded text-sm">
-                                        ${timeOptionsHTML}
-                                    </select>
-                                </div>
-                                <div>
-                                    <button type="button" class="w-full bg-amber-500 text-white font-bold py-2 px-4 rounded hover:bg-amber-600 transition add-spot-btn" data-key="${key}">
-                                        追加
-                                    </button>
-                                </div>
+                        <div class="flex flex-wrap gap-2 items-end mb-2">
+                            <div><input type="date" id="new_spot_date_${key}" class="p-1 border border-slate-300 rounded text-xs w-28"></div>
+                            <div>
+                                <select id="new_spot_start_${key}" class="p-1 border border-slate-300 rounded text-xs">
+                                    ${timeOptionsHTML}
+                                </select>
                             </div>
+                            <span class="text-xs">～</span>
+                            <div>
+                                <select id="new_spot_end_${key}" class="p-1 border border-slate-300 rounded text-xs">
+                                    ${timeOptionsHTML}
+                                </select>
+                            </div>
+                            <button type="button" class="bg-amber-500 text-white text-xs font-bold py-1 px-3 rounded hover:bg-amber-600 add-spot-btn" data-key="${key}">追加</button>
                         </div>
 
-                        <div id="spotsContainer_${key}" class="pl-2 space-y-2">
+                        <div id="spotsContainer_${key}" class="grid grid-cols-2 gap-2">
                             ${spotsHTML}
                         </div>
                     </div>
                 `;
-                adminSettingsContainer.appendChild(section);
+                container.appendChild(section);
             });
         }
 
         // Admin Event Delegation
-        adminSettingsContainer.addEventListener('click', (e) => {
+        const adminContainer = document.querySelector('main'); // Delegation root
+        adminContainer.addEventListener('click', (e) => {
             // Weekly Time Add
             if (e.target.closest('.add-time-btn')) {
                 const btn = e.target.closest('.add-time-btn');
@@ -797,18 +1008,15 @@
                     const timeStr = `${startInput.value} - ${endInput.value}`;
                     const container = document.getElementById(`spotsContainer_${key}`);
                     const div = document.createElement('div');
-                    div.className = "flex items-center gap-2 mb-2 bg-yellow-50 p-2 rounded border border-yellow-200 spot-item slide-in-up";
+                    div.className = "flex items-center gap-2 mb-2 bg-yellow-100 p-2 rounded border border-yellow-200 spot-item slide-in-up";
                     div.innerHTML = `
-                        <span class="font-bold text-slate-700">${dateInput.value}</span>
-                        <span class="text-slate-600">${timeStr}</span>
+                        <span class="font-bold text-slate-700 text-xs">${dateInput.value}</span>
+                        <span class="text-slate-600 text-xs">${timeStr}</span>
                         <input type="hidden" name="spot_date_${key}[]" value="${dateInput.value}">
                         <input type="hidden" name="spot_time_${key}[]" value="${timeStr}">
-                        <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn">
-                            削除
-                        </button>
+                        <button type="button" class="text-red-500 hover:text-red-700 ml-auto remove-spot-btn text-xs font-bold">削除</button>
                     `;
                     container.appendChild(div);
-                    // Reset inputs
                     dateInput.value = '';
                 } else {
                     alert("日付と時間をすべて選択してください");
@@ -830,13 +1038,16 @@
 
             try {
                 if (!currentSettings || !currentSettings.courses) {
-                    throw new Error("設定データが読み込まれていません。リロードしてください。");
+                    throw new Error("設定データエラー。リロードしてください。");
                 }
 
                 const formData = new FormData(adminSettingsForm);
                 
                 const newSettings = {
                     schoolName: formData.get('schoolName') || "渋谷",
+                    schoolId: formData.get('schoolId') || "shibuya001",
+                    address: formData.get('address') || "",
+                    phoneNumber: formData.get('phoneNumber') || "",
                     courses: {}
                 };
 
@@ -856,11 +1067,10 @@
                     const newTimeInputs = document.getElementsByName(`new_time_${key}[]`);
                     newTimeInputs.forEach(input => { if(input.value) times.push(input.value) });
 
-                    // Spots (Construct Object)
+                    // Spots
                     const spots = {};
                     const spotDates = document.getElementsByName(`spot_date_${key}[]`);
                     const spotTimes = document.getElementsByName(`spot_time_${key}[]`);
-                    
                     if (spotDates.length > 0) {
                         for (let i = 0; i < spotDates.length; i++) {
                             const d = spotDates[i].value;
@@ -892,8 +1102,52 @@
         });
 
 
-        // --- Booking Logic ---
+        // Login Logic
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            loginSubmitBtn.disabled = true;
+            loginSubmitBtn.textContent = "認証中...";
+            loginError.classList.add('hidden');
+            try {
+                if (auth) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    if(email && password) {
+                         user = { email: email, isAnonymous: false };
+                         updateUIBasedOnAuth();
+                    } else { throw new Error("Input required"); }
+                }
+                loginModal.classList.add('hidden');
+                enterAdminMode();
+                showToast("ログインしました");
+            } catch (error) {
+                console.error("Login failed:", error);
+                loginError.classList.remove('hidden');
+            } finally {
+                loginSubmitBtn.disabled = false;
+                loginSubmitBtn.textContent = "ログイン";
+            }
+        });
 
+        logoutBtn.addEventListener('click', async () => {
+            if (auth) {
+                await signOut(auth);
+                await signInAnonymously(auth); 
+            } else {
+                user = { isAnonymous: true };
+                updateUIBasedOnAuth();
+            }
+            exitAdminMode();
+            showToast("ログアウトしました");
+        });
+
+        closeLoginModal.addEventListener('click', () => {
+            loginModal.classList.add('hidden');
+        });
+
+        // Booking Logic (Existing)
         function showToast(msg) {
             toast.textContent = msg;
             toast.classList.remove('translate-y-20', 'opacity-0');
@@ -920,18 +1174,15 @@
             document.title = name + '校 体験レッスン予約';
         }
 
-        // Grade Selection
         gradeSelector.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
                 selectedGrade = e.target.dataset.grade;
-                
                 document.querySelectorAll('#gradeSelector button').forEach(btn => {
                     btn.classList.remove('bg-teal-500', 'text-white', 'border-teal-500');
                     btn.classList.add('bg-white');
                 });
                 e.target.classList.add('bg-teal-500', 'text-white', 'border-teal-500');
                 e.target.classList.remove('bg-white');
-                
                 calendarContainer.style.display = 'block';
                 calendarContainer.classList.add('fade-in');
                 timeSlotsContainer.style.display = 'none';
@@ -940,7 +1191,6 @@
             }
         });
 
-        // Calendar Nav
         prevMonthBtn.addEventListener('click', () => {
             current_date.setMonth(current_date.getMonth() - 1);
             renderCalendar();
@@ -951,72 +1201,57 @@
             renderCalendar();
         });
         
-        // Date Selection
         calendarGrid.addEventListener('click', (e) => {
              const target = e.target.closest('.available');
             if (target) {
                 const date = target.dataset.date;
                 selectedDate = new Date(date);
-                
                 document.querySelectorAll('.calendar-day').forEach(day => day.classList.remove('selected-day'));
                 target.classList.add('selected-day');
-
                 renderTimeSlots(selectedDate);
             }
         });
 
-        // Time Selection
         timeSlotsContainer.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON') {
                 const time = e.target.dataset.time;
                 const courseData = currentSettings.courses[selectedGrade];
-                
                 const formattedDate = `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
                 selectedSlotInfo.textContent = `${formattedDate} ${time} [${courseData.courseName}]`;
-                
                 const price = Number(courseData.price).toLocaleString();
                 selectedPriceInfo.textContent = `参加費: ${price}円`;
-
                 bookingForm.style.display = 'block';
                 bookingForm.classList.add('slide-in-up');
-                
                 bookingForm.scrollIntoView({ behavior: 'smooth' });
             }
         });
         
-        // Submit Booking
         userInfoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const parentName = document.getElementById('parentName').value;
             const childName = document.getElementById('childName').value;
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
-            
             const courseData = currentSettings.courses[selectedGrade];
-            const price = courseData.price;
             
-            // 予約データ構築
             const bookingData = {
                 schoolName: currentSettings.schoolName,
+                schoolId: currentSettings.schoolId || "unknown",
                 grade: selectedGrade,
                 courseName: courseData.courseName,
                 date: selectedDate.toISOString(),
-                timeString: selectedSlotInfo.textContent, // 表示用文字列
-                price: price,
+                timeString: selectedSlotInfo.textContent,
+                price: courseData.price,
                 parentName: parentName,
                 childName: childName,
                 email: email,
                 phone: phone
             };
 
-            // ボタン非活性
             submitBookingBtn.disabled = true;
             submitBookingBtn.textContent = "予約処理中...";
 
-            // Firestoreへ保存
             const success = await addBookingToFirestore(bookingData);
-            
             submitBookingBtn.disabled = false;
             submitBookingBtn.textContent = "この内容で予約を確定する";
 
@@ -1024,13 +1259,9 @@
                 modalSummary.innerHTML = `
                     <p><strong>教室:</strong> ${currentSettings.schoolName}校</p>
                     <p><strong>日時:</strong> ${selectedSlotInfo.textContent}</p>
-                    <p><strong>金額:</strong> ${Number(price).toLocaleString()}円 (当日現地払い)</p>
                     <p><strong>保護者様:</strong> ${parentName} 様</p>
-                    <p><strong>お子様:</strong> ${childName} 様</p>
                 `;
                 successModal.classList.remove('hidden');
-                
-                // フォームクリア
                 userInfoForm.reset();
                 resetBookingView();
             } else {
@@ -1042,17 +1273,12 @@
              successModal.classList.add('hidden');
         });
 
-
-        // Render Calendar Func
         function renderCalendar() {
             const year = current_date.getFullYear();
             const month = current_date.getMonth();
-
             calendarTitle.textContent = `${year}年 ${month + 1}月`;
-            
             const calendarDays = calendarGrid.querySelectorAll('.calendar-day');
             calendarDays.forEach(day => day.remove());
-
             const firstDayOfMonth = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const today = new Date();
@@ -1068,18 +1294,10 @@
                 const cell = document.createElement('div');
                 cell.textContent = day;
                 cell.classList.add('calendar-day', 'flex', 'items-center', 'justify-center', 'rounded-full');
-                
                 const currentDateObj = new Date(year, month, day);
-                // ISO String for Map key (YYYY-MM-DD)
-                // Note: toISOString() uses UTC. We need local YYYY-MM-DD.
                 const localDateStr = `${currentDateObj.getFullYear()}-${String(currentDateObj.getMonth()+1).padStart(2,'0')}-${String(currentDateObj.getDate()).padStart(2,'0')}`;
-                
                 const courseData = currentSettings.courses[selectedGrade];
-
-                // Check Weekly
                 const isWeeklyAvailable = courseData.days.includes(currentDateObj.getDay());
-                
-                // Check Spots
                 const isSpotAvailable = courseData.spots && courseData.spots[localDateStr] && courseData.spots[localDateStr].length > 0;
                 
                 if (currentDateObj < today) {
@@ -1087,52 +1305,35 @@
                 } else if (isWeeklyAvailable || isSpotAvailable) {
                     cell.classList.add('available');
                     cell.dataset.date = currentDateObj.toISOString();
-                    // Spotがある場合は色を変えるなどの処理も可能だが、今は共通スタイル
                     if (isSpotAvailable && !isWeeklyAvailable) {
-                        cell.style.border = "2px solid #fbbf24"; // Amber border for spots
+                        cell.style.border = "2px solid #fbbf24";
                     }
                 } else {
                       cell.classList.add('disabled');
                 }
-
                 calendarGrid.appendChild(cell);
             }
         }
         
-        // Render TimeSlots Func
         function renderTimeSlots(date) {
             timeSlotsContainer.innerHTML = '';
             timeSlotsContainer.style.display = 'block';
             timeSlotsContainer.classList.add('slide-in-up');
-            
             const courseData = currentSettings.courses[selectedGrade];
             const localDateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-            
             const title = document.createElement('h3');
             title.className = "text-lg font-bold mb-3 text-center";
-            const formattedDate = `${date.getMonth() + 1}月${date.getDate()}日の時間を選択`;
-            title.textContent = formattedDate;
+            title.textContent = `${date.getMonth() + 1}月${date.getDate()}日の時間を選択`;
             timeSlotsContainer.appendChild(title);
-            
             const buttonContainer = document.createElement('div');
             buttonContainer.className = "flex flex-col items-center gap-3";
-
-            // Merge times
             let availableTimes = [];
-            
-            // 1. Weekly Times
             if (courseData.days.includes(date.getDay())) {
                 availableTimes = [...courseData.times];
             }
-            
-            // 2. Spot Times
             if (courseData.spots && courseData.spots[localDateStr]) {
-                // スポット設定がある場合、重複を避けるか、追加するか。
-                // ここでは単純に追加し、Setで重複排除する
                 availableTimes = [...availableTimes, ...courseData.spots[localDateStr]];
             }
-            
-            // Deduplicate and Sort
             availableTimes = [...new Set(availableTimes)].sort();
 
             if (availableTimes.length === 0) {
@@ -1152,7 +1353,6 @@
             timeSlotsContainer.appendChild(buttonContainer);
         }
 
-        // Initialize App
         initFirebase();
     });
     </script>
