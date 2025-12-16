@@ -387,6 +387,13 @@
                                 <label class="block text-sm font-bold text-slate-600 mb-1">電話番号</label>
                                 <input type="text" name="phoneNumber" id="adminPhoneInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: 03-1234-5678">
                             </div>
+                            
+                            <div class="border-t border-slate-200 pt-4 mt-6">
+                                <label class="block text-sm font-bold text-slate-600 mb-1">管理画面アクセス許可IPアドレス (カンマ区切り)</label>
+                                <textarea name="allowedIPs" id="adminAllowedIPsInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm" placeholder="例: 192.168.1.1, 203.0.113.5"></textarea>
+                                <p class="text-xs text-slate-400 mt-1">※空欄の場合は制限なし。設定すると、許可されたIP以外からのログインを拒否します。</p>
+                                <p class="text-xs text-blue-500 mt-1" id="currentIPDisplay">あなたの現在のIPアドレス: 取得中...</p>
+                            </div>
                         </div>
                     </div>
 
@@ -606,6 +613,7 @@
             <div class="text-center mb-6">
                 <h2 class="text-xl font-bold text-slate-800">管理者ログイン</h2>
                 <p class="text-sm text-slate-500 mt-1">Firebase Authenticationによる認証</p>
+                <div id="ipCheckStatus" class="mt-2 text-xs text-slate-500"></div>
             </div>
             
             <form id="loginForm" class="space-y-4">
@@ -652,6 +660,7 @@
             schoolId: "shibuya001",
             address: "東京都渋谷区神南1-1-1",
             phoneNumber: "03-1234-5678",
+            allowedIPs: "", // IP制限用
             // マスタデータ (学年設定はスケジュール側に移管)
             contents: [
                 { id: "c1", name: "はじめてのロボット体験", type: "trial", duration: 60, price: 1500, grades: ["preschool"], imageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=2070&auto=format&fit=crop" }, 
@@ -693,6 +702,7 @@
         const adminSchoolIdInput = document.getElementById('adminSchoolIdInput');
         const adminAddressInput = document.getElementById('adminAddressInput');
         const adminPhoneInput = document.getElementById('adminPhoneInput');
+        const adminAllowedIPsInput = document.getElementById('adminAllowedIPsInput');
         
         // --- Firebase Setup ---
         const initFirebase = async () => {
@@ -729,6 +739,28 @@
                 currentSettings = defaultData;
                 renderApp();
             }
+        };
+
+        // --- IP Check Helper ---
+        const getMyIP = async () => {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                return data.ip;
+            } catch (e) {
+                console.warn("IP fetch failed", e);
+                return null;
+            }
+        };
+
+        const checkIPAccess = async (allowedIPsStr) => {
+            if (!allowedIPsStr || allowedIPsStr.trim() === "") return true; // 設定なしは許可
+            
+            const myIP = await getMyIP();
+            if (!myIP) return true; // 取得失敗時も一旦許可（安全側）
+            
+            const allowedList = allowedIPsStr.split(',').map(s => s.trim()).filter(s => s !== "");
+            return allowedList.includes(myIP);
         };
 
         // --- Firestore Data Logic ---
@@ -900,6 +932,7 @@
         const closeLoginModal = document.getElementById('closeLoginModal');
         const logoutBtn = document.getElementById('logoutBtn');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+        const ipCheckStatus = document.getElementById('ipCheckStatus');
 
         // State
         let isAdminViewVisible = false;
@@ -1032,7 +1065,13 @@
             document.getElementById('adminSchoolIdInput').value = currentSettings.schoolId || "";
             document.getElementById('adminAddressInput').value = currentSettings.address || "";
             document.getElementById('adminPhoneInput').value = currentSettings.phoneNumber || "";
+            document.getElementById('adminAllowedIPsInput').value = currentSettings.allowedIPs || "";
             
+            // 現在のIPを表示
+            getMyIP().then(ip => {
+                document.getElementById('currentIPDisplay').textContent = `あなたの現在のIPアドレス: ${ip || '取得失敗'}`;
+            });
+
             renderContentsList();
             renderScheduleCalendar();
             renderAdminDashboard();
@@ -1530,7 +1569,8 @@
                 schoolName: formData.get('schoolName'),
                 schoolId: formData.get('schoolId'),
                 address: formData.get('address'),
-                phoneNumber: formData.get('phoneNumber')
+                phoneNumber: formData.get('phoneNumber'),
+                allowedIPs: formData.get('allowedIPs') // IP制限
             };
 
             await saveSettingsToFirestore(newSettings);
@@ -1545,6 +1585,14 @@
             const password = document.getElementById('adminPassword').value;
             loginSubmitBtn.disabled = true;
             try {
+                // IP Check (Client Side Only for Demo)
+                const isIPAllowed = await checkIPAccess(currentSettings.allowedIPs);
+                if (!isIPAllowed) {
+                    alert("許可されていないIPアドレスからのアクセスです。");
+                    loginSubmitBtn.disabled = false;
+                    return;
+                }
+
                 if (auth) {
                     await signInWithEmailAndPassword(auth, email, password);
                 } else {
