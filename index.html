@@ -275,11 +275,15 @@
                 <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none active-tab whitespace-nowrap" data-tab="dashboard">
                     ダッシュボード
                 </button>
-                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="school-settings">
-                    教室設定
+                <!-- 追加: 予約管理タブ -->
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="booking-management">
+                    予約管理
                 </button>
                 <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="course-settings">
                     体験会設定
+                </button>
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="school-settings">
+                    教室設定
                 </button>
             </div>
 
@@ -363,10 +367,116 @@
                     <p class="text-xs text-slate-400 mt-2 text-right">※体験会をクリックすると予約詳細を確認できます</p>
                 </div>
 
+                <!-- 2. 予約管理 (新規追加) -->
+                <div id="tab-booking-management" class="tab-content hidden">
+                    <h2 class="text-xl font-bold text-slate-800 mb-4 border-l-4 border-green-500 pl-3">予約申し込み一覧</h2>
+                    
+                    <!-- フィルタエリア -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">期間 (開始)</label>
+                                <input type="date" id="filterStartDate" class="w-full p-2 border border-slate-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">期間 (終了)</label>
+                                <input type="date" id="filterEndDate" class="w-full p-2 border border-slate-300 rounded text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">体験会コンテンツ</label>
+                                <select id="filterContent" class="w-full p-2 border border-slate-300 rounded text-sm bg-white">
+                                    <option value="">すべて</option>
+                                    <!-- JSで生成 -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">種別</label>
+                                <select id="filterType" class="w-full p-2 border border-slate-300 rounded text-sm bg-white">
+                                    <option value="">すべて</option>
+                                    <option value="trial">体験会</option>
+                                    <option value="event">イベント</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end gap-2">
+                             <button id="resetFilterBtn" class="bg-slate-300 text-slate-700 font-bold py-2 px-4 rounded hover:bg-slate-400 text-sm">リセット</button>
+                             <button id="applyFilterBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded hover:bg-green-700 text-sm flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                検索
+                             </button>
+                        </div>
+                    </div>
+
+                    <!-- 一覧表示エリア -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-600 border border-slate-200">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3">開催日</th>
+                                    <th class="px-4 py-3">時間</th>
+                                    <th class="px-4 py-3">コンテンツ名</th>
+                                    <th class="px-4 py-3">申込者</th>
+                                    <th class="px-4 py-3">連絡先</th>
+                                    <th class="px-4 py-3 text-center">種別</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingListTableBody" class="bg-white divide-y divide-slate-100">
+                                <!-- JSで生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 3. 体験会設定 -->
+                <div id="tab-course-settings" class="tab-content hidden">
+                    <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-orange-500 pl-3">体験会コース設定</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <!-- 1. コンテンツ管理 -->
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
+                                <span class="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-sm">1</span>
+                                コンテンツ管理 (マスタ)
+                            </h3>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                                <div class="text-center">
+                                    <button type="button" id="openContentModalBtn" class="bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition w-full">
+                                        + 新規コンテンツを作成
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="contentsListContainer" class="space-y-2 max-h-[400px] overflow-y-auto">
+                                <!-- JS Generated Contents -->
+                            </div>
+                        </div>
+
+                        <!-- 2. スケジュール管理 -->
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
+                                <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-sm">2</span>
+                                開催日程登録 (カレンダー)
+                            </h3>
+                            <div class="flex items-center justify-between mb-2">
+                                <button type="button" id="prevScheduleMonth" class="px-2 py-1 text-xs bg-white border rounded">&lt;</button>
+                                <span id="scheduleCalendarTitle" class="font-bold text-slate-700"></span>
+                                <button type="button" id="nextScheduleMonth" class="px-2 py-1 text-xs bg-white border rounded">&gt;</button>
+                            </div>
+                            <div id="scheduleCalendar" class="border border-slate-200 text-xs">
+                                <div class="grid grid-cols-7 bg-slate-100 font-bold text-center py-1">
+                                    <div class="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-blue-500">土</div>
+                                </div>
+                                <div id="scheduleCalendarGrid" class="grid grid-cols-7 gap-px bg-slate-200 border-t border-slate-200">
+                                    <!-- JS Generated -->
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1 text-right">※日付をクリックして開催枠を追加・編集</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- フォーム開始 (設定保存用) -->
                 <form id="adminSettingsForm">
-                    
-                    <!-- 2. 教室設定 -->
+                    <!-- 4. 教室設定 -->
                     <div id="tab-school-settings" class="tab-content hidden">
                         <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-purple-500 pl-3">教室基本情報</h2>
                         
@@ -393,53 +503,6 @@
                                 <textarea name="allowedIPs" id="adminAllowedIPsInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500 text-sm" placeholder="例: 192.168.1.1, 203.0.113.5"></textarea>
                                 <p class="text-xs text-slate-400 mt-1">※空欄の場合は制限なし。設定すると、許可されたIP以外からのログインを拒否します。</p>
                                 <p class="text-xs text-blue-500 mt-1" id="currentIPDisplay">あなたの現在のIPアドレス: 取得中...</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. 体験会設定 -->
-                    <div id="tab-course-settings" class="tab-content hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-orange-500 pl-3">体験会コース設定</h2>
-                        
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!-- 1. コンテンツ管理 -->
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
-                                    <span class="bg-orange-100 text-orange-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-sm">1</span>
-                                    コンテンツ管理 (マスタ)
-                                </h3>
-                                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-                                    <div class="text-center">
-                                        <button type="button" id="openContentModalBtn" class="bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition w-full">
-                                            + 新規コンテンツを作成
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="contentsListContainer" class="space-y-2 max-h-[400px] overflow-y-auto">
-                                    <!-- JS Generated Contents -->
-                                </div>
-                            </div>
-
-                            <!-- 2. スケジュール管理 -->
-                            <div>
-                                <h3 class="text-lg font-bold text-slate-700 mb-4 flex items-center">
-                                    <span class="bg-blue-100 text-blue-600 w-6 h-6 rounded-full flex items-center justify-center mr-2 text-sm">2</span>
-                                    開催日程登録 (カレンダー)
-                                </h3>
-                                <div class="flex items-center justify-between mb-2">
-                                    <button type="button" id="prevScheduleMonth" class="px-2 py-1 text-xs bg-white border rounded">&lt;</button>
-                                    <span id="scheduleCalendarTitle" class="font-bold text-slate-700"></span>
-                                    <button type="button" id="nextScheduleMonth" class="px-2 py-1 text-xs bg-white border rounded">&gt;</button>
-                                </div>
-                                <div id="scheduleCalendar" class="border border-slate-200 text-xs">
-                                    <div class="grid grid-cols-7 bg-slate-100 font-bold text-center py-1">
-                                        <div class="text-red-500">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="text-blue-500">土</div>
-                                    </div>
-                                    <div id="scheduleCalendarGrid" class="grid grid-cols-7 gap-px bg-slate-200 border-t border-slate-200">
-                                        <!-- JS Generated -->
-                                    </div>
-                                </div>
-                                <p class="text-xs text-slate-400 mt-1 text-right">※日付をクリックして開催枠を追加・編集</p>
                             </div>
                         </div>
                     </div>
@@ -795,6 +858,7 @@
                  });
                  if (isAdminViewVisible) {
                      renderAdminDashboard();
+                     renderBookingManagement(); // 追加
                  }
                  // 予約画面が開かれている場合、予約数の変動を反映させるため再描画
                  if (selectedDate && timeSlotsContainer.style.display !== 'none') {
@@ -887,6 +951,14 @@
         const statsEndDateInput = document.getElementById('statsEndDate');
         const calcStatsBtn = document.getElementById('calcStatsBtn');
         const periodStatsResult = document.getElementById('periodStatsResult');
+        
+        // Booking Management Filter
+        const filterStartDateInput = document.getElementById('filterStartDate');
+        const filterEndDateInput = document.getElementById('filterEndDate');
+        const filterContentSelect = document.getElementById('filterContent');
+        const filterTypeSelect = document.getElementById('filterType');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const resetFilterBtn = document.getElementById('resetFilterBtn');
 
         // Modal
         const scheduleModal = document.getElementById('scheduleModal');
@@ -1005,9 +1077,10 @@
                 tabContents.forEach(content => content.classList.add('hidden'));
                 document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
                 
-                if (targetTab === 'dashboard') {
+                if (targetTab === 'dashboard' || targetTab === 'booking-management') {
                     saveBtnContainer.classList.add('hidden');
-                    renderAdminDashboard();
+                    if (targetTab === 'dashboard') renderAdminDashboard();
+                    if (targetTab === 'booking-management') renderBookingManagement();
                 } else {
                     saveBtnContainer.classList.remove('hidden');
                 }
@@ -1057,6 +1130,16 @@
             `;
             periodStatsResult.classList.remove('hidden');
         });
+        
+        // Booking Management Filter Logic
+        applyFilterBtn.addEventListener('click', renderBookingManagement);
+        resetFilterBtn.addEventListener('click', () => {
+            filterStartDateInput.value = '';
+            filterEndDateInput.value = '';
+            filterContentSelect.value = '';
+            filterTypeSelect.value = '';
+            renderBookingManagement();
+        });
 
         // --- Admin Render Functions ---
         
@@ -1072,9 +1155,19 @@
                 document.getElementById('currentIPDisplay').textContent = `あなたの現在のIPアドレス: ${ip || '取得失敗'}`;
             });
 
+            // フィルターのコンテンツ選択肢更新
+            filterContentSelect.innerHTML = '<option value="">すべて</option>';
+            currentSettings.contents.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.name; // 保存データはnameでフィルタリングするため
+                opt.textContent = c.name;
+                filterContentSelect.appendChild(opt);
+            });
+
             renderContentsList();
             renderScheduleCalendar();
             renderAdminDashboard();
+            renderBookingManagement();
         }
         
         // 1. コンテンツ管理
@@ -1403,7 +1496,7 @@
 
         closeScheduleModalBtn.addEventListener('click', () => scheduleModal.classList.add('hidden'));
 
-        // 3. ダッシュボード
+        // 3. ダッシュボード & Booking Management Helpers
         function calculateStats(start, end) {
             let totalCapacity = 0;
             // 枠数集計
@@ -1522,6 +1615,81 @@
                 }
                 grid.appendChild(cell);
             }
+        }
+        
+        // 4. 予約管理
+        function renderBookingManagement() {
+            const tbody = document.getElementById('bookingListTableBody');
+            tbody.innerHTML = '';
+            
+            // Filter conditions
+            const startStr = filterStartDateInput.value;
+            const endStr = filterEndDateInput.value;
+            const contentFilter = filterContentSelect.value;
+            const typeFilter = filterTypeSelect.value; // Note: type info is in Content, not Booking directly, need check
+            
+            const startDate = startStr ? new Date(startStr) : null;
+            const endDate = endStr ? new Date(endStr) : null;
+            
+            // Sort bookings by date desc
+            const sortedBookings = [...allBookings].sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return dateB - dateA;
+            });
+
+            const filteredBookings = sortedBookings.filter(b => {
+                // Date Filter
+                if (startDate || endDate) {
+                    const bDate = new Date(b.date);
+                    const bDateOnly = new Date(bDate.getFullYear(), bDate.getMonth(), bDate.getDate());
+                    if (startDate && bDateOnly < startDate) return false;
+                    if (endDate && bDateOnly > endDate) return false;
+                }
+                
+                // Content Filter
+                if (contentFilter && b.courseName !== contentFilter) return false;
+                
+                // Type Filter (Need to lookup content type)
+                if (typeFilter) {
+                    const content = currentSettings.contents.find(c => c.id === b.contentId);
+                    if (!content || content.type !== typeFilter) return false;
+                }
+                
+                return true;
+            });
+
+            if (filteredBookings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">該当する予約はありません</td></tr>`;
+                return;
+            }
+
+            filteredBookings.forEach(b => {
+                const bDate = new Date(b.date);
+                const dateStr = `${bDate.getFullYear()}/${bDate.getMonth()+1}/${bDate.getDate()}`;
+                
+                // Get Content Info for Type
+                const content = currentSettings.contents.find(c => c.id === b.contentId);
+                const typeLabel = content ? (content.type === 'event' ? '<span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs">イベント</span>' : '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">体験会</span>') : '<span class="text-gray-400">-</span>';
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50";
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-bold text-slate-700">${dateStr}</td>
+                    <td class="px-4 py-3">${b.startTime}</td>
+                    <td class="px-4 py-3 font-medium">${b.courseName}</td>
+                    <td class="px-4 py-3">
+                        <div class="font-bold">${b.childName} <span class="text-xs font-normal">さん</span></div>
+                        <div class="text-xs text-slate-500">保護者: ${b.parentName}</div>
+                    </td>
+                    <td class="px-4 py-3 text-xs text-slate-500">
+                        <div>${b.email}</div>
+                        <div>${b.phone}</div>
+                    </td>
+                    <td class="px-4 py-3 text-center">${typeLabel}</td>
+                `;
+                tbody.appendChild(row);
+            });
         }
 
         // Booking Detail Modal Logic
