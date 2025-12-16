@@ -402,39 +402,10 @@
                                     コンテンツ管理 (マスタ)
                                 </h3>
                                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-                                    <h4 class="text-sm font-bold text-slate-600 mb-2 border-b border-slate-300 pb-1" id="contentFormTitle">新規作成</h4>
-                                    <div class="space-y-3">
-                                        <input type="hidden" id="editingContentId" value="">
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1">コンテンツ名</label>
-                                            <input type="text" id="newContentName" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="例: はじめてのロボット">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-500 mb-1">バナー画像URL</label>
-                                            <input type="text" id="newContentImage" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="https://example.com/image.jpg">
-                                            <p class="text-[10px] text-slate-400 mt-1">※画像のURLを入力してください（任意）</p>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <div class="flex-1">
-                                                <label class="block text-xs font-bold text-slate-500 mb-1">種別</label>
-                                                <select id="newContentType" class="w-full p-2 border border-slate-300 rounded text-sm">
-                                                    <option value="trial">体験会</option>
-                                                    <option value="event">イベント</option>
-                                                </select>
-                                            </div>
-                                            <div class="flex-1">
-                                                <label class="block text-xs font-bold text-slate-500 mb-1">時間(分)</label>
-                                                <input type="number" id="newContentDuration" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="90" value="90">
-                                            </div>
-                                            <div class="flex-1">
-                                                <label class="block text-xs font-bold text-slate-500 mb-1">金額(円)</label>
-                                                <input type="number" id="newContentPrice" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="1500">
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-2">
-                                            <button type="button" id="cancelContentBtn" class="flex-1 bg-slate-200 text-slate-600 font-bold py-2 rounded hover:bg-slate-300 transition hidden">キャンセル</button>
-                                            <button type="button" id="addContentBtn" class="flex-[2] bg-orange-500 text-white font-bold py-2 rounded hover:bg-orange-600 transition">作成して保存</button>
-                                        </div>
+                                    <div class="text-center">
+                                        <button type="button" id="openContentModalBtn" class="bg-orange-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-orange-600 transition w-full">
+                                            + 新規コンテンツを作成
+                                        </button>
                                     </div>
                                 </div>
                                 <div id="contentsListContainer" class="space-y-2 max-h-[400px] overflow-y-auto">
@@ -482,6 +453,48 @@
         <footer class="text-center mt-8 text-sm text-slate-500 pb-16">
             <p>&copy; 2025 ロボットプログラミング教室 <span id="footerSchoolName">渋谷</span>校 All Rights Reserved.</p>
         </footer>
+    </div>
+
+    <!-- コンテンツ登録・編集モーダル -->
+    <div id="contentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl transform transition-all scale-100">
+            <h3 class="text-lg font-bold mb-4 flex justify-between items-center">
+                <span id="contentFormTitle">コンテンツを作成</span>
+                <button id="closeContentModal" class="text-slate-400 hover:text-slate-600">&times;</button>
+            </h3>
+            
+            <div class="space-y-4">
+                <input type="hidden" id="editingContentId" value="">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">コンテンツ名</label>
+                    <input type="text" id="newContentName" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="例: はじめてのロボット">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">バナー画像URL</label>
+                    <input type="text" id="newContentImage" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="https://example.com/image.jpg">
+                    <p class="text-[10px] text-slate-400 mt-1">※画像のURLを入力してください（任意）</p>
+                </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">種別</label>
+                        <select id="newContentType" class="w-full p-2 border border-slate-300 rounded text-sm">
+                            <option value="trial">体験会</option>
+                            <option value="event">イベント</option>
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">時間(分)</label>
+                        <input type="number" id="newContentDuration" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="90" value="90">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-500 mb-1">金額(円)</label>
+                        <input type="number" id="newContentPrice" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="1500">
+                    </div>
+                </div>
+                
+                <button type="button" id="addContentBtn" class="w-full bg-orange-500 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition shadow-md">保存する</button>
+            </div>
+        </div>
     </div>
 
     <!-- スケジュール登録モーダル -->
@@ -849,6 +862,12 @@
         const addScheduleBtn = document.getElementById('addScheduleBtn');
         const cancelScheduleEditBtn = document.getElementById('cancelScheduleEditBtn');
 
+        // Content Modal
+        const contentModal = document.getElementById('contentModal');
+        const openContentModalBtn = document.getElementById('openContentModalBtn');
+        const closeContentModalBtn = document.getElementById('closeContentModal');
+        const addContentBtn = document.getElementById('addContentBtn');
+
         // Booking Detail Modal
         const bookingDetailModal = document.getElementById('bookingDetailModal');
         const closeDetailModalBtn = document.getElementById('closeDetailModal');
@@ -1065,6 +1084,16 @@
             });
         }
 
+        // コンテンツモーダル表示
+        openContentModalBtn.addEventListener('click', () => {
+            resetContentForm();
+            contentModal.classList.remove('hidden');
+        });
+        
+        closeContentModalBtn.addEventListener('click', () => {
+            contentModal.classList.add('hidden');
+        });
+
         // コンテンツ編集モード設定
         function editContent(index) {
             const content = currentSettings.contents[index];
@@ -1080,12 +1109,11 @@
             editingContentId = content.id;
             document.getElementById('contentFormTitle').textContent = "コンテンツを編集";
             document.getElementById('addContentBtn').textContent = "更新して保存";
-            document.getElementById('cancelContentBtn').classList.remove('hidden');
+            
+            contentModal.classList.remove('hidden');
         }
 
-        // コンテンツ編集キャンセル
-        document.getElementById('cancelContentBtn').addEventListener('click', resetContentForm);
-
+        // コンテンツフォームリセット
         function resetContentForm() {
             editingContentId = null;
             document.getElementById('newContentName').value = "";
@@ -1096,7 +1124,6 @@
             
             document.getElementById('contentFormTitle').textContent = "新規作成";
             document.getElementById('addContentBtn').textContent = "作成して保存";
-            document.getElementById('cancelContentBtn').classList.add('hidden');
         }
 
         // コンテンツ追加・更新
@@ -1130,6 +1157,7 @@
                 resetContentForm();
                 
                 btn.disabled = false;
+                contentModal.classList.add('hidden');
             } else {
                 alert("必須項目を入力してください");
             }
