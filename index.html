@@ -187,31 +187,67 @@
                             </p>
                         </div>
 
-                        <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">2</span>保護者様の情報をご入力ください</h2>
-                        <form id="userInfoForm" class="space-y-4">
-                            <div>
-                                <label for="parentName" class="block text-sm font-medium text-slate-700 mb-1">保護者様のお名前</label>
-                                <input type="text" id="parentName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="山田 太郎">
-                            </div>
-                            <div>
-                                <label for="email" class="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
-                                <input type="email" id="email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="example@email.com">
-                            </div>
-                            <div>
-                                <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">電話番号</label>
-                                <input type="tel" id="phone" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="090-1234-5678">
-                            </div>
-                             <div>
-                                <label for="childName" class="block text-sm font-medium text-slate-700 mb-1">お子様のお名前 (かな)</label>
-                                <input type="text" id="childName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="やまだ はなこ">
+                        <!-- 入力フェーズ -->
+                        <div id="inputPhase">
+                            <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">2</span>保護者様の情報をご入力ください</h2>
+                            <form id="userInfoForm" class="space-y-4">
+                                <div>
+                                    <label for="parentName" class="block text-sm font-medium text-slate-700 mb-1">保護者様のお名前</label>
+                                    <input type="text" id="parentName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="山田 太郎">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-slate-700 mb-1">メールアドレス</label>
+                                    <input type="email" id="email" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="example@email.com">
+                                </div>
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">電話番号</label>
+                                    <input type="tel" id="phone" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="090-1234-5678">
+                                </div>
+                                 <div>
+                                    <label for="childName" class="block text-sm font-medium text-slate-700 mb-1">お子様のお名前 (かな)</label>
+                                    <input type="text" id="childName" required class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-400 focus:border-teal-400" placeholder="やまだ はなこ">
+                                </div>
+                                
+                                <div class="pt-4">
+                                    <button type="submit" id="toConfirmBtn" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-transform hover:scale-102 shadow-lg">
+                                        確認画面へ進む
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 確認フェーズ (初期非表示) -->
+                        <div id="confirmPhase" class="hidden">
+                            <h2 class="text-xl font-bold mb-4 text-center"><span class="bg-teal-500 text-white rounded-full px-3 py-1 mr-2">3</span>入力内容の確認</h2>
+                            <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-inner mb-6 space-y-4">
+                                <div class="border-b border-slate-100 pb-2">
+                                    <p class="text-xs text-slate-500">保護者様のお名前</p>
+                                    <p class="font-bold text-lg text-slate-800" id="confirmParentName"></p>
+                                </div>
+                                <div class="border-b border-slate-100 pb-2">
+                                    <p class="text-xs text-slate-500">メールアドレス</p>
+                                    <p class="font-bold text-lg text-slate-800" id="confirmEmail"></p>
+                                </div>
+                                <div class="border-b border-slate-100 pb-2">
+                                    <p class="text-xs text-slate-500">電話番号</p>
+                                    <p class="font-bold text-lg text-slate-800" id="confirmPhone"></p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-slate-500">お子様のお名前</p>
+                                    <p class="font-bold text-lg text-slate-800" id="confirmChildName"></p>
+                                </div>
                             </div>
                             
-                            <div class="pt-4">
-                                <button type="submit" id="submitBookingBtn" class="w-full text-lg font-extrabold py-4 px-6 bg-teal-500 text-white rounded-xl hover:bg-teal-600 transition-transform hover:scale-102 shadow-lg">
+                            <div class="flex flex-col gap-3">
+                                <button type="button" id="confirmBookingBtn" class="w-full text-lg font-extrabold py-4 px-6 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-transform hover:scale-102 shadow-lg">
                                     この内容で予約を確定する
                                 </button>
+                                <button type="button" id="backToInputBtn" class="w-full text-sm font-bold py-3 px-6 bg-slate-200 text-slate-600 rounded-xl hover:bg-slate-300 transition-colors">
+                                    修正する
+                                </button>
                             </div>
-                        </form>
+                        </div>
+
                     </div>
                 </div>
             </main>
@@ -584,6 +620,9 @@
         // 予約バリデーション用変数
         let selectedStartTime = "";
         let selectedSlotCapacity = 0;
+        
+        // 予約データ保持用
+        let pendingBookingData = null;
 
         // DOM要素
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -774,10 +813,14 @@
         const nextMonthBtn = document.getElementById('nextMonth');
         const timeSlotsContainer = document.getElementById('timeSlotsContainer');
         const bookingForm = document.getElementById('bookingForm');
+        const inputPhase = document.getElementById('inputPhase');
+        const confirmPhase = document.getElementById('confirmPhase');
+        const confirmBookingBtn = document.getElementById('confirmBookingBtn');
+        const backToInputBtn = document.getElementById('backToInputBtn');
+        
         const selectedSlotInfo = document.getElementById('selectedSlotInfo');
         const selectedPriceInfo = document.getElementById('selectedPriceInfo');
         const userInfoForm = document.getElementById('userInfoForm');
-        const submitBookingBtn = document.getElementById('submitBookingBtn');
         const successModal = document.getElementById('successModal');
         const closeModalBtn = document.getElementById('closeModal');
         const modalSummary = document.getElementById('modal-summary');
@@ -1080,7 +1123,7 @@
                         <div class="font-bold text-slate-700 hover:text-blue-600 transition">${item.startTime} - ${content.name}</div>
                         <div class="text-xs text-slate-500">定員: ${item.capacity}名 <span class="text-blue-400 text-[10px] ml-1">(クリックで編集)</span></div>
                     </div>
-                    <button class="text-red-500 hover:bg-red-50 p-1 rounded text-xs delete-sched-btn" data-idx="${idx}">削除</button>
+                    <button class="text-red-500 hover:bg-red-50 p-1 rounded text-xs delete-sched-btn" data-idx="${idx}" data-content="${item.contentId}" data-time="${item.startTime}">削除</button>
                 `;
                 list.appendChild(div);
             });
@@ -1104,7 +1147,22 @@
 
             list.querySelectorAll('.delete-sched-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
-                    if(confirm("この枠を削除しますか？")) {
+                    const contentId = e.target.dataset.content;
+                    const startTime = e.target.dataset.time;
+                    
+                    // 予約状況確認
+                    const hasBooking = allBookings.some(b => {
+                        if (!b.date) return false;
+                        const bDate = new Date(b.date);
+                        const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
+                        return bLocalStr === selectedScheduleDateStr && b.contentId === contentId && b.startTime === startTime;
+                    });
+
+                    const confirmMsg = hasBooking 
+                        ? "お申込みをされている方がいらっしゃいますが、本当に削除しますか？"
+                        : "この枠を削除しますか？";
+
+                    if(confirm(confirmMsg)) {
                         const idx = parseInt(e.target.dataset.idx);
                         currentSettings.schedule[selectedScheduleDateStr].splice(idx, 1);
                         if(currentSettings.schedule[selectedScheduleDateStr].length === 0) {
@@ -1372,6 +1430,8 @@
             calendarContainer.style.display = 'none';
             timeSlotsContainer.style.display = 'none';
             bookingForm.style.display = 'none';
+            inputPhase.classList.remove('hidden');
+            confirmPhase.classList.add('hidden');
             selectedGrade = null;
         }
 
@@ -1423,16 +1483,55 @@
                 
                 bookingForm.style.display = 'block';
                 bookingForm.classList.add('slide-in-up');
+                
+                // Reset to input phase
+                inputPhase.classList.remove('hidden');
+                confirmPhase.classList.add('hidden');
+                
                 bookingForm.scrollIntoView({ behavior: 'smooth' });
             }
         });
         
-        userInfoForm.addEventListener('submit', async (e) => {
+        // Confirmation Flow
+        userInfoForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const parentName = document.getElementById('parentName').value;
             const childName = document.getElementById('childName').value;
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
+            
+            // データ一時保存
+            pendingBookingData = {
+                schoolName: currentSettings.schoolName,
+                schoolId: currentSettings.schoolId || "unknown",
+                grade: selectedGrade,
+                courseName: selectedContent.name,
+                contentId: selectedContent.id,
+                date: selectedDate.toISOString(),
+                timeString: selectedSlotInfo.textContent,
+                startTime: selectedStartTime, 
+                price: selectedContent.price,
+                parentName, childName, email, phone
+            };
+            
+            // 確認画面表示
+            document.getElementById('confirmParentName').textContent = parentName;
+            document.getElementById('confirmEmail').textContent = email;
+            document.getElementById('confirmPhone').textContent = phone;
+            document.getElementById('confirmChildName').textContent = childName;
+            
+            inputPhase.classList.add('hidden');
+            confirmPhase.classList.remove('hidden');
+            confirmPhase.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        backToInputBtn.addEventListener('click', () => {
+            confirmPhase.classList.add('hidden');
+            inputPhase.classList.remove('hidden');
+        });
+        
+        confirmBookingBtn.addEventListener('click', async () => {
+            if (!pendingBookingData) return;
             
             // クライアント側での最終定員チェック
             const localDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
@@ -1441,42 +1540,32 @@
                 const bDate = new Date(b.date);
                 const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
                 return bLocalStr === localDateStr && 
-                       b.contentId === selectedContent.id && 
+                       b.contentId === pendingBookingData.contentId && 
                        b.startTime === selectedStartTime;
             }).length;
 
             if (currentBookingsCount >= selectedSlotCapacity) {
                 alert("申し訳ありません。タッチの差で満席となりました。\n恐れ入りますが、別の日程をご検討ください。");
-                // 画面をリフレッシュ
                 renderTimeSlots(selectedDate);
+                // Reset views
+                inputPhase.classList.remove('hidden');
+                confirmPhase.classList.add('hidden');
+                bookingForm.style.display = 'none';
                 return;
             }
 
-            const bookingData = {
-                schoolName: currentSettings.schoolName,
-                schoolId: currentSettings.schoolId || "unknown",
-                grade: selectedGrade,
-                courseName: selectedContent.name,
-                contentId: selectedContent.id,
-                date: selectedDate.toISOString(),
-                timeString: selectedSlotInfo.textContent, // 表示用
-                startTime: selectedStartTime, 
-                price: selectedContent.price,
-                parentName, childName, email, phone
-            };
+            confirmBookingBtn.disabled = true;
+            confirmBookingBtn.textContent = "予約処理中...";
 
-            submitBookingBtn.disabled = true;
-            submitBookingBtn.textContent = "予約処理中...";
-
-            const success = await addBookingToFirestore(bookingData);
-            submitBookingBtn.disabled = false;
-            submitBookingBtn.textContent = "この内容で予約を確定する";
+            const success = await addBookingToFirestore(pendingBookingData);
+            confirmBookingBtn.disabled = false;
+            confirmBookingBtn.textContent = "この内容で予約を確定する";
 
             if (success) {
                 modalSummary.innerHTML = `
                     <p><strong>教室:</strong> ${currentSettings.schoolName}校</p>
                     <p><strong>日時:</strong> ${selectedSlotInfo.textContent}</p>
-                    <p><strong>保護者様:</strong> ${parentName} 様</p>
+                    <p><strong>保護者様:</strong> ${pendingBookingData.parentName} 様</p>
                 `;
                 successModal.classList.remove('hidden');
                 userInfoForm.reset();
@@ -1554,6 +1643,7 @@
                 const dayEvents = currentSettings.schedule[localDateStr];
                 dayEvents.forEach(evt => {
                     const content = currentSettings.contents.find(c => c.id === evt.contentId);
+                    // 修正: evt.grades または content.grades を確認する
                     const targetGrades = evt.grades || (content ? content.grades : []) || [];
                     if (content && targetGrades.includes(selectedGrade)) {
                         availableSlots.push({ ...evt, contentName: content.name });
