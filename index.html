@@ -88,11 +88,6 @@
             border: 1px solid #e2e8f0;
             padding: 4px;
             vertical-align: top;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .dashboard-calendar-cell:hover {
-            background-color: #f8fafc;
         }
         .dashboard-event-item {
             font-size: 0.75rem;
@@ -105,6 +100,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .dashboard-event-item:hover {
+            opacity: 0.8;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -285,6 +286,7 @@
                             </div>
                         </div>
                     </div>
+                    <p class="text-xs text-slate-400 mt-2 text-right">※体験会をクリックすると予約詳細を確認できます</p>
                 </div>
 
                 <!-- フォーム開始 (設定保存用) -->
@@ -326,7 +328,9 @@
                                     コンテンツ管理 (マスタ)
                                 </h3>
                                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
+                                    <h4 class="text-sm font-bold text-slate-600 mb-2 border-b border-slate-300 pb-1" id="contentFormTitle">新規作成</h4>
                                     <div class="space-y-3">
+                                        <input type="hidden" id="editingContentId" value="">
                                         <div>
                                             <label class="block text-xs font-bold text-slate-500 mb-1">コンテンツ名</label>
                                             <input type="text" id="newContentName" class="w-full p-2 border border-slate-300 rounded text-sm" placeholder="例: はじめてのロボット">
@@ -356,7 +360,10 @@
                                                 <label><input type="checkbox" class="grade-check" value="upper"> 高学年</label>
                                             </div>
                                         </div>
-                                        <button type="button" id="addContentBtn" class="w-full bg-orange-500 text-white font-bold py-2 rounded hover:bg-orange-600 transition">コンテンツを作成</button>
+                                        <div class="flex gap-2">
+                                            <button type="button" id="cancelContentBtn" class="flex-1 bg-slate-200 text-slate-600 font-bold py-2 rounded hover:bg-slate-300 transition hidden">キャンセル</button>
+                                            <button type="button" id="addContentBtn" class="flex-[2] bg-orange-500 text-white font-bold py-2 rounded hover:bg-orange-600 transition">作成</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="contentsListContainer" class="space-y-2 max-h-[400px] overflow-y-auto">
@@ -417,10 +424,14 @@
             <!-- 既存のスケジュールリスト -->
             <div id="dayScheduleList" class="mb-4 space-y-2 text-sm max-h-32 overflow-y-auto"></div>
 
-            <!-- 新規追加フォーム -->
+            <!-- 新規追加・編集フォーム -->
             <div class="border-t border-slate-100 pt-4">
-                <h4 class="text-xs font-bold text-slate-500 mb-2">新規枠を追加</h4>
+                <h4 class="text-xs font-bold text-slate-500 mb-2 flex justify-between">
+                    <span id="scheduleFormTitle">新規枠を追加</span>
+                    <button type="button" id="cancelScheduleEditBtn" class="text-xs text-blue-500 hover:underline hidden">キャンセル</button>
+                </h4>
                 <div class="space-y-3">
+                    <input type="hidden" id="editingScheduleIndex" value="-1">
                     <div>
                         <label class="block text-xs text-slate-500 mb-1">コンテンツ</label>
                         <select id="modalContentSelect" class="w-full p-2 border border-slate-300 rounded text-sm bg-white"></select>
@@ -437,6 +448,38 @@
                     </div>
                     <button type="button" id="addScheduleBtn" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 text-sm">追加する</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 予約詳細モーダル -->
+    <div id="bookingDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl p-6 max-w-lg w-full shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-2">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800" id="detailModalTitle">体験会詳細</h3>
+                    <p class="text-sm text-slate-500" id="detailModalSubtitle"></p>
+                </div>
+                <button id="closeDetailModal" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto">
+                <table class="w-full text-sm text-left text-slate-600">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-2">お名前</th>
+                            <th class="px-4 py-2">保護者様</th>
+                            <th class="px-4 py-2">連絡先</th>
+                            <th class="px-4 py-2 text-right">申込日時</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingDetailList"></tbody>
+                </table>
+                <div id="noBookingsMsg" class="text-center py-8 text-slate-400 hidden">予約はありません</div>
+            </div>
+            
+            <div class="mt-4 pt-2 border-t border-slate-100 text-right">
+                <button class="px-4 py-2 bg-slate-200 text-slate-700 rounded hover:bg-slate-300 font-bold text-sm" onclick="document.getElementById('bookingDetailModal').classList.add('hidden')">閉じる</button>
             </div>
         </div>
     </div>
@@ -533,6 +576,8 @@
         let adminDashboardDate = new Date(); // 管理画面ダッシュボードカレンダー用
         let adminScheduleDate = new Date(); // 管理画面スケジュール登録カレンダー用
         let selectedScheduleDateStr = ""; // モーダルで開いている日付
+        let editingContentId = null; // コンテンツ編集モード用
+        let editingScheduleIndex = -1; // スケジュール編集モード用
 
         // DOM要素
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -705,6 +750,11 @@
         const scheduleModal = document.getElementById('scheduleModal');
         const closeScheduleModalBtn = document.getElementById('closeScheduleModal');
         const addScheduleBtn = document.getElementById('addScheduleBtn');
+        const cancelScheduleEditBtn = document.getElementById('cancelScheduleEditBtn');
+
+        // Booking Detail Modal
+        const bookingDetailModal = document.getElementById('bookingDetailModal');
+        const closeDetailModalBtn = document.getElementById('closeDetailModal');
 
         // User Flow
         const gradeSelector = document.getElementById('gradeSelector');
@@ -841,7 +891,10 @@
                 div.innerHTML = `
                     <div class="flex justify-between font-bold text-slate-700 mb-1">
                         <span>${content.name}</span>
-                        <button type="button" class="text-red-500 text-xs hover:underline delete-content-btn" data-index="${index}">削除</button>
+                        <div class="space-x-2">
+                            <button type="button" class="text-blue-500 text-xs hover:underline edit-content-btn" data-index="${index}">編集</button>
+                            <button type="button" class="text-red-500 text-xs hover:underline delete-content-btn" data-index="${index}">削除</button>
+                        </div>
                     </div>
                     <div class="flex gap-2 text-xs text-slate-500">
                         <span class="bg-slate-100 px-1 rounded">${content.type === 'event' ? 'イベント' : '体験会'}</span>
@@ -853,7 +906,10 @@
                 container.appendChild(div);
             });
 
-            // 削除イベント
+            // 編集・削除イベント
+            container.querySelectorAll('.edit-content-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => editContent(parseInt(e.target.dataset.index)));
+            });
             container.querySelectorAll('.delete-content-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     if(confirm('このコンテンツを削除しますか？\n※既に設定済みのスケジュールには影響しません')) {
@@ -865,7 +921,43 @@
             });
         }
 
-        // コンテンツ追加
+        // コンテンツ編集モード設定
+        function editContent(index) {
+            const content = currentSettings.contents[index];
+            if (!content) return;
+
+            document.getElementById('newContentName').value = content.name;
+            document.getElementById('newContentType').value = content.type;
+            document.getElementById('newContentDuration').value = content.duration;
+            document.getElementById('newContentPrice').value = content.price;
+            document.querySelectorAll('.grade-check').forEach(c => {
+                c.checked = content.grades && content.grades.includes(c.value);
+            });
+
+            // 編集モードUIへ切り替え
+            editingContentId = content.id;
+            document.getElementById('contentFormTitle').textContent = "コンテンツを編集";
+            document.getElementById('addContentBtn').textContent = "更新";
+            document.getElementById('cancelContentBtn').classList.remove('hidden');
+        }
+
+        // コンテンツ編集キャンセル
+        document.getElementById('cancelContentBtn').addEventListener('click', resetContentForm);
+
+        function resetContentForm() {
+            editingContentId = null;
+            document.getElementById('newContentName').value = "";
+            document.getElementById('newContentType').value = "trial";
+            document.getElementById('newContentDuration').value = "90";
+            document.getElementById('newContentPrice').value = "1500";
+            document.querySelectorAll('.grade-check').forEach(c => c.checked = false);
+            
+            document.getElementById('contentFormTitle').textContent = "新規作成";
+            document.getElementById('addContentBtn').textContent = "作成";
+            document.getElementById('cancelContentBtn').classList.add('hidden');
+        }
+
+        // コンテンツ追加・更新
         document.getElementById('addContentBtn').addEventListener('click', () => {
             const name = document.getElementById('newContentName').value;
             const type = document.getElementById('newContentType').value;
@@ -876,15 +968,20 @@
             document.querySelectorAll('.grade-check:checked').forEach(c => grades.push(c.value));
 
             if(name && duration && price) {
-                const newContent = {
-                    id: 'c' + Date.now(),
+                const contentData = {
+                    id: editingContentId || ('c' + Date.now()),
                     name, type, duration: parseInt(duration), price: parseInt(price), grades
                 };
-                currentSettings.contents.push(newContent);
+
+                if (editingContentId) {
+                    const idx = currentSettings.contents.findIndex(c => c.id === editingContentId);
+                    if (idx !== -1) currentSettings.contents[idx] = contentData;
+                } else {
+                    currentSettings.contents.push(contentData);
+                }
+                
                 renderContentsList();
-                // Clear
-                document.getElementById('newContentName').value = "";
-                document.querySelectorAll('.grade-check').forEach(c => c.checked = false);
+                resetContentForm();
             } else {
                 alert("必須項目を入力してください");
             }
@@ -942,6 +1039,7 @@
                 select.appendChild(opt);
             });
 
+            resetScheduleForm();
             renderDayScheduleList();
             scheduleModal.classList.remove('hidden');
         }
@@ -963,27 +1061,51 @@
                 const div = document.createElement('div');
                 div.className = "flex justify-between items-center bg-slate-50 p-2 rounded border border-slate-200";
                 div.innerHTML = `
-                    <div>
-                        <div class="font-bold text-slate-700">${item.startTime} - ${content.name}</div>
-                        <div class="text-xs text-slate-500">定員: ${item.capacity}名</div>
+                    <div class="cursor-pointer flex-1" onclick="editSchedule(${idx})">
+                        <div class="font-bold text-slate-700 hover:text-blue-600 transition">${item.startTime} - ${content.name}</div>
+                        <div class="text-xs text-slate-500">定員: ${item.capacity}名 <span class="text-blue-400 text-[10px] ml-1">(クリックで編集)</span></div>
                     </div>
                     <button class="text-red-500 hover:bg-red-50 p-1 rounded text-xs delete-sched-btn" data-idx="${idx}">削除</button>
                 `;
                 list.appendChild(div);
             });
+            // 編集機能をglobal関数経由で呼び出すためのhack
+            window.editSchedule = (idx) => {
+                const item = schedules[idx];
+                document.getElementById('modalContentSelect').value = item.contentId;
+                document.getElementById('modalStartTime').value = item.startTime;
+                document.getElementById('modalCapacity').value = item.capacity;
+                
+                editingScheduleIndex = idx;
+                document.getElementById('scheduleFormTitle').textContent = "枠を編集";
+                document.getElementById('addScheduleBtn').textContent = "更新する";
+                document.getElementById('cancelScheduleEditBtn').classList.remove('hidden');
+            };
 
             list.querySelectorAll('.delete-sched-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const idx = parseInt(e.target.dataset.idx);
                     currentSettings.schedule[selectedScheduleDateStr].splice(idx, 1);
-                    // 空ならキー削除
                     if(currentSettings.schedule[selectedScheduleDateStr].length === 0) {
                         delete currentSettings.schedule[selectedScheduleDateStr];
                     }
                     renderDayScheduleList();
-                    renderScheduleCalendar(); // 背景のカレンダーも更新
+                    renderScheduleCalendar(); 
+                    if(editingScheduleIndex === idx) resetScheduleForm();
                 });
             });
+        }
+
+        // スケジュール編集キャンセル
+        document.getElementById('cancelScheduleEditBtn').addEventListener('click', resetScheduleForm);
+
+        function resetScheduleForm() {
+            editingScheduleIndex = -1;
+            document.getElementById('modalStartTime').value = "";
+            document.getElementById('modalCapacity').value = "5";
+            document.getElementById('scheduleFormTitle').textContent = "新規枠を追加";
+            document.getElementById('addScheduleBtn').textContent = "追加する";
+            document.getElementById('cancelScheduleEditBtn').classList.add('hidden');
         }
 
         addScheduleBtn.addEventListener('click', () => {
@@ -995,14 +1117,23 @@
                 if (!currentSettings.schedule[selectedScheduleDateStr]) {
                     currentSettings.schedule[selectedScheduleDateStr] = [];
                 }
-                currentSettings.schedule[selectedScheduleDateStr].push({
-                    id: 's' + Date.now(),
+                
+                const newData = {
+                    id: editingScheduleIndex !== -1 ? currentSettings.schedule[selectedScheduleDateStr][editingScheduleIndex].id : ('s' + Date.now()),
                     contentId,
                     startTime,
                     capacity: parseInt(capacity)
-                });
+                };
+
+                if (editingScheduleIndex !== -1) {
+                    currentSettings.schedule[selectedScheduleDateStr][editingScheduleIndex] = newData;
+                } else {
+                    currentSettings.schedule[selectedScheduleDateStr].push(newData);
+                }
+
                 renderDayScheduleList();
                 renderScheduleCalendar();
+                resetScheduleForm();
             } else {
                 alert("全ての項目を入力してください");
             }
@@ -1055,14 +1186,13 @@
                         const content = currentSettings.contents.find(c => c.id === evt.contentId) || { name: '??' };
                         
                         // Count bookings
-                        const count = allBookings.filter(b => {
+                        const bookingsForThis = allBookings.filter(b => {
                             if (!b.date) return false;
                             const bDate = new Date(b.date);
                             const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
-                            // Booking data comparison: ID match preferred but using time match for compatibility
-                            // Assuming booking saves contentName and startTime
                             return bLocalStr === dateStr && b.timeString.includes(evt.startTime) && b.courseName === content.name;
-                        }).length;
+                        });
+                        const count = bookingsForThis.length;
                         
                         const item = document.createElement('div');
                         item.className = "dashboard-event-item";
@@ -1080,12 +1210,50 @@
                                 <span class="text-xs bg-white px-1 rounded border border-slate-200">残:${remaining}</span>
                             </div>
                         `;
+                        
+                        // Click to view details
+                        item.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            openBookingDetailModal(dateStr, evt, content, bookingsForThis);
+                        });
+
                         cell.appendChild(item);
                     });
                 }
                 grid.appendChild(cell);
             }
         }
+
+        // Booking Detail Modal Logic
+        function openBookingDetailModal(dateStr, event, content, bookings) {
+            document.getElementById('detailModalTitle').textContent = content.name;
+            document.getElementById('detailModalSubtitle').textContent = `${dateStr} ${event.startTime} - 申込数: ${bookings.length}/${event.capacity}`;
+            
+            const tbody = document.getElementById('bookingDetailList');
+            tbody.innerHTML = '';
+            
+            if (bookings.length === 0) {
+                document.getElementById('noBookingsMsg').classList.remove('hidden');
+            } else {
+                document.getElementById('noBookingsMsg').classList.add('hidden');
+                bookings.forEach(b => {
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-slate-100 hover:bg-slate-50";
+                    const bDate = b.createdAt ? new Date(b.createdAt.seconds * 1000) : new Date();
+                    const bDateStr = `${bDate.getMonth()+1}/${bDate.getDate()} ${bDate.getHours()}:${String(bDate.getMinutes()).padStart(2,'0')}`;
+                    row.innerHTML = `
+                        <td class="px-4 py-2 font-bold">${b.childName} <span class="text-xs font-normal text-slate-400">さん</span></td>
+                        <td class="px-4 py-2">${b.parentName}</td>
+                        <td class="px-4 py-2 text-xs text-slate-500">${b.email}<br>${b.phone}</td>
+                        <td class="px-4 py-2 text-right text-xs text-slate-400">${bDateStr}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            bookingDetailModal.classList.remove('hidden');
+        }
+        
+        closeDetailModalBtn.addEventListener('click', () => bookingDetailModal.classList.add('hidden'));
 
         // Save Settings
         adminSettingsForm.addEventListener('submit', async (e) => {
@@ -1223,6 +1391,7 @@
                 contentId: selectedContent.id,
                 date: selectedDate.toISOString(),
                 timeString: selectedSlotInfo.textContent, // 表示用
+                startTime: selectedContent.startTime || "", // Added startTime
                 price: selectedContent.price,
                 parentName, childName, email, phone
             };
