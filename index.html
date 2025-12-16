@@ -562,9 +562,9 @@
             phoneNumber: "03-1234-5678",
             // マスタデータ (学年設定はスケジュール側に移管)
             contents: [
-                { id: "c1", name: "はじめてのロボット体験", type: "trial", duration: 60, price: 1500 },
-                { id: "c2", name: "探検ロボットプログラミング", type: "trial", duration: 90, price: 2200 },
-                { id: "c3", name: "AIロボット開発チャレンジ", type: "event", duration: 90, price: 3300 }
+                { id: "c1", name: "はじめてのロボット体験", type: "trial", duration: 60, price: 1500, grades: ["preschool"] }, // 旧データ互換用grades
+                { id: "c2", name: "探検ロボットプログラミング", type: "trial", duration: 90, price: 2200, grades: ["lower"] },
+                { id: "c3", name: "AIロボット開発チャレンジ", type: "event", duration: 90, price: 3300, grades: ["upper"] }
             ],
             // スケジュールデータ: YYYY-MM-DD キーで配列を持つ
             // item: { id, contentId, startTime, capacity, grades: [] }
@@ -1084,6 +1084,7 @@
                 document.getElementById('modalCapacity').value = item.capacity;
                 // 学年チェックボックス反映
                 document.querySelectorAll('.schedule-grade-check').forEach(c => {
+                    // 古いデータにはgradesがないため、空ならfalse
                     c.checked = item.grades && item.grades.includes(c.value);
                 });
                 
@@ -1485,9 +1486,11 @@
                 let isAvailable = false;
                 if (currentSettings.schedule[localDateStr]) {
                     const dayEvents = currentSettings.schedule[localDateStr];
-                    // 修正: schedule.grades を確認する
+                    // 修正: schedule.grades または content.grades を確認する (後方互換性)
                     isAvailable = dayEvents.some(evt => {
-                        return evt.grades && evt.grades.includes(selectedGrade);
+                        const content = currentSettings.contents.find(c => c.id === evt.contentId);
+                        const targetGrades = evt.grades || (content ? content.grades : []) || [];
+                        return targetGrades.includes(selectedGrade);
                     });
                 }
 
@@ -1521,8 +1524,9 @@
                 const dayEvents = currentSettings.schedule[localDateStr];
                 dayEvents.forEach(evt => {
                     const content = currentSettings.contents.find(c => c.id === evt.contentId);
-                    // 修正: evt.grades を確認する
-                    if (content && evt.grades && evt.grades.includes(selectedGrade)) {
+                    // 修正: evt.grades または content.grades を確認する
+                    const targetGrades = evt.grades || (content ? content.grades : []) || [];
+                    if (content && targetGrades.includes(selectedGrade)) {
                         availableSlots.push({ ...evt, contentName: content.name });
                     }
                 });
