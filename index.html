@@ -81,6 +81,22 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ダッシュボードカレンダー用スタイル */
+        .dashboard-calendar-cell {
+            min-height: 120px;
+            border: 1px solid #e2e8f0;
+            padding: 4px;
+            vertical-align: top;
+        }
+        .dashboard-event-item {
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+            padding: 4px;
+            border-radius: 4px;
+            background-color: #f1f5f9;
+            border-left: 3px solid #cbd5e1;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 relative">
@@ -95,10 +111,10 @@
         </button>
     </div>
 
-    <div class="container mx-auto max-w-2xl p-4 sm:p-6 mt-4 relative">
+    <div class="container mx-auto max-w-4xl p-4 sm:p-6 mt-4 relative">
         
         <!-- === お客様向け予約画面 (User View) === -->
-        <div id="userView">
+        <div id="userView" class="max-w-2xl mx-auto">
             <!-- ヘッダー情報 -->
             <header class="text-center mb-8">
                 <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg relative group">
@@ -206,19 +222,19 @@
             </header>
 
             <!-- タブナビゲーション -->
-            <div class="flex border-b border-slate-200 mb-6">
-                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none active-tab" data-tab="dashboard">
+            <div class="flex border-b border-slate-200 mb-6 overflow-x-auto">
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none active-tab whitespace-nowrap" data-tab="dashboard">
                     ダッシュボード
                 </button>
-                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none" data-tab="school-settings">
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="school-settings">
                     教室設定
                 </button>
-                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none" data-tab="course-settings">
+                <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="course-settings">
                     体験会設定
                 </button>
             </div>
 
-            <main class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-slate-200 min-h-[500px]">
+            <main class="bg-white p-4 sm:p-8 rounded-2xl shadow-lg border border-slate-200 min-h-[500px]">
                 
                 <!-- 1. ダッシュボード -->
                 <div id="tab-dashboard" class="tab-content">
@@ -237,25 +253,34 @@
                         </div>
                     </div>
 
-                    <h3 class="font-bold text-slate-700 mb-3">今後の体験会日程と予約数</h3>
+                    <div class="flex items-center justify-between mb-4 bg-slate-50 p-3 rounded-lg">
+                        <button id="prevDashboardMonth" class="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 font-bold text-slate-600">&lt; 前月</button>
+                        <h3 id="dashboardCalendarTitle" class="text-lg font-bold text-slate-800"></h3>
+                        <button id="nextDashboardMonth" class="px-3 py-1 bg-white border border-slate-300 rounded hover:bg-slate-100 font-bold text-slate-600">翌月 &gt;</button>
+                    </div>
+
+                    <!-- 管理用カレンダー -->
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-left text-slate-600">
-                            <thead class="text-xs text-slate-700 uppercase bg-slate-50">
-                                <tr>
-                                    <th class="px-4 py-3 rounded-l-lg">日程</th>
-                                    <th class="px-4 py-3">時間</th>
-                                    <th class="px-4 py-3">コース</th>
-                                    <th class="px-4 py-3 text-center">予約 / 定員</th>
-                                    <th class="px-4 py-3 rounded-r-lg text-center">状態</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboardScheduleList">
-                                <!-- JSで動的に生成 -->
-                                <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-slate-400">読み込み中...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div id="dashboardCalendar" class="min-w-[700px]">
+                            <!-- Header -->
+                            <div class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-t-lg">
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-red-500">日</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-slate-700">月</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-slate-700">火</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-slate-700">水</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-slate-700">木</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-slate-700">金</div>
+                                <div class="bg-slate-100 text-center py-2 text-sm font-bold text-blue-500">土</div>
+                            </div>
+                            <!-- Body -->
+                            <div id="dashboardCalendarGrid" class="grid grid-cols-7 gap-px bg-slate-200 border-x border-b border-slate-200">
+                                <!-- JSで生成 -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-slate-500 text-right">
+                        ※ <span class="inline-block w-2 h-2 bg-blue-100 border border-blue-300 mr-1"></span>: 予約あり
+                        <span class="inline-block w-2 h-2 bg-red-100 border border-red-300 mr-1 ml-2"></span>: 満席
                     </div>
                 </div>
 
@@ -422,6 +447,8 @@
         // アプリ内で使用するデータ状態
         let currentSettings = null;
         let allBookings = []; // 予約データ保持用
+        
+        let adminDashboardDate = new Date(); // 管理画面カレンダー用
 
         // DOM要素
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -469,8 +496,6 @@
                         updateUIBasedOnAuth();
                         if (user) {
                             subscribeToSettings();
-                            // 管理者の場合のみ予約データを購読したいが、簡易実装として常時購読（データ量少前提）
-                            // 本来はSecurity Rulesで保護されるべき
                             subscribeToBookings(); 
                         }
                     });
@@ -490,7 +515,6 @@
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
                     currentSettings = docSnap.data();
-                    // 後方互換性: 新しいフィールドがない場合はデフォルトで埋める
                     if(!currentSettings.schoolId) currentSettings.schoolId = defaultData.schoolId;
                     if(!currentSettings.address) currentSettings.address = defaultData.address;
                     if(!currentSettings.phoneNumber) currentSettings.phoneNumber = defaultData.phoneNumber;
@@ -514,9 +538,8 @@
             });
         };
         
-        // 予約データの監視 (Dashboard用)
+        // 予約データの監視
         const subscribeToBookings = () => {
-             // Rule 2違反を避けるため、単純なcollection参照で全取得しクライアント側で処理する
              const bookingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
              onSnapshot(bookingsRef, (snapshot) => {
                  allBookings = [];
@@ -611,6 +634,10 @@
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
         const saveBtnContainer = document.getElementById('saveBtnContainer');
+        
+        // Dashboard Cal Nav
+        const prevDashboardMonthBtn = document.getElementById('prevDashboardMonth');
+        const nextDashboardMonthBtn = document.getElementById('nextDashboardMonth');
 
         const loginModal = document.getElementById('loginModal');
         const loginForm = document.getElementById('loginForm');
@@ -701,7 +728,7 @@
         // Tab Switching Logic
         tabBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent form submit
+                e.preventDefault(); 
                 const targetTab = btn.dataset.tab;
                 currentAdminTab = targetTab;
                 
@@ -726,6 +753,16 @@
                 }
             });
         });
+        
+        // Admin Dashboard Calendar Nav
+        prevDashboardMonthBtn.addEventListener('click', () => {
+            adminDashboardDate.setMonth(adminDashboardDate.getMonth() - 1);
+            renderAdminDashboard();
+        });
+        nextDashboardMonthBtn.addEventListener('click', () => {
+            adminDashboardDate.setMonth(adminDashboardDate.getMonth() + 1);
+            renderAdminDashboard();
+        });
 
         // --- Admin Render Functions ---
         
@@ -746,9 +783,7 @@
         function renderAdminDashboard() {
             // Summary Stats
             document.getElementById('totalBookingsCount').textContent = allBookings.length;
-            
             if (allBookings.length > 0) {
-                 // Sort by createdAt desc
                  const sorted = [...allBookings].sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
                  const lastDate = sorted[0].createdAt ? new Date(sorted[0].createdAt.seconds * 1000) : new Date();
                  document.getElementById('recentBookingDate').textContent = `${lastDate.getMonth()+1}/${lastDate.getDate()} ${lastDate.getHours()}:${String(lastDate.getMinutes()).padStart(2,'0')}`;
@@ -756,99 +791,101 @@
                  document.getElementById('recentBookingDate').textContent = "なし";
             }
 
-            // Schedule Table
-            const tbody = document.getElementById('dashboardScheduleList');
-            tbody.innerHTML = '';
+            // Calendar
+            const year = adminDashboardDate.getFullYear();
+            const month = adminDashboardDate.getMonth();
+            document.getElementById('dashboardCalendarTitle').textContent = `${year}年 ${month + 1}月`;
             
-            // 今後30日間の予定を生成
-            const schedule = [];
-            const today = new Date();
-            today.setHours(0,0,0,0);
+            const grid = document.getElementById('dashboardCalendarGrid');
+            grid.innerHTML = '';
             
-            for(let i=0; i<30; i++) {
-                const d = new Date(today);
-                d.setDate(today.getDate() + i);
-                const localDateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Empty Cells
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const empty = document.createElement('div');
+                empty.className = "bg-slate-50 border border-slate-200 min-h-[100px]";
+                grid.appendChild(empty);
+            }
+            
+            // Date Cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const cell = document.createElement('div');
+                cell.className = "bg-white dashboard-calendar-cell";
+                const dateLabel = document.createElement('div');
+                dateLabel.className = "text-xs font-bold text-slate-500 mb-1";
+                dateLabel.textContent = day;
+                cell.appendChild(dateLabel);
                 
+                const currentDateObj = new Date(year, month, day);
+                const localDateStr = `${currentDateObj.getFullYear()}-${String(currentDateObj.getMonth()+1).padStart(2,'0')}-${String(currentDateObj.getDate()).padStart(2,'0')}`;
+                
+                // Events for this day
+                const events = [];
                 Object.keys(currentSettings.courses).forEach(key => {
                     const course = currentSettings.courses[key];
                     let times = [];
-                    
                     // Weekly
-                    if (course.days.includes(d.getDay())) {
+                    if (course.days.includes(currentDateObj.getDay())) {
                         times = [...times, ...course.times];
                     }
                     // Spot
                     if (course.spots && course.spots[localDateStr]) {
                         times = [...times, ...course.spots[localDateStr]];
                     }
-                    
-                    // Unique times
-                    times = [...new Set(times)];
+                    times = [...new Set(times)].sort();
                     
                     times.forEach(t => {
-                        schedule.push({
-                            dateObj: d,
-                            dateStr: localDateStr,
+                        events.push({
                             time: t,
-                            courseName: course.courseName,
+                            name: course.courseName,
                             grade: key,
                             capacity: course.capacity
                         });
                     });
                 });
-            }
-            
-            // Sort schedule by date, then time
-            schedule.sort((a, b) => {
-                if (a.dateObj - b.dateObj !== 0) return a.dateObj - b.dateObj;
-                return a.time.localeCompare(b.time);
-            });
-            
-            // Render Table Rows
-            if (schedule.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">予定されている体験会はありません</td></tr>`;
-                return;
-            }
-
-            schedule.forEach(item => {
-                // Count bookings for this slot
-                // Simple matching: date ISO string prefix match & time match
-                // Note: booking.date is ISOString (UTC). Need careful comparison or store local date string.
-                // In addBooking, we stored ISO string.
-                // To compare accurately: convert booking ISO to local YYYY-MM-DD
-                const bookingCount = allBookings.filter(b => {
-                    if (!b.date) return false;
-                    const bDate = new Date(b.date);
-                    const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
-                    // timeString check: "10:00 - 11:00 [Course]" -> startsWith or includes
-                    return bLocalStr === item.dateStr && b.timeString.includes(item.time) && b.grade === item.grade;
-                }).length;
-
-                const row = document.createElement('tr');
-                row.className = "border-b border-slate-100 hover:bg-slate-50";
                 
-                // Status Color
-                let statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">受付中</span>';
-                if (bookingCount >= item.capacity) {
-                    statusBadge = '<span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-0.5 rounded">満席</span>';
-                } else if (bookingCount > 0) {
-                     statusBadge = '<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded">予約あり</span>';
-                }
+                // Sort events by time
+                events.sort((a, b) => a.time.localeCompare(b.time));
+                
+                events.forEach(evt => {
+                    // Count bookings
+                    const count = allBookings.filter(b => {
+                        if (!b.date) return false;
+                        const bDate = new Date(b.date);
+                        const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
+                        return bLocalStr === localDateStr && b.timeString.includes(evt.time) && b.grade === evt.grade;
+                    }).length;
+                    
+                    const item = document.createElement('div');
+                    item.className = "dashboard-event-item";
+                    
+                    const isFull = count >= evt.capacity;
+                    const hasBooking = count > 0;
+                    
+                    if (isFull) {
+                        item.classList.add('bg-red-50', 'border-red-300');
+                    } else if (hasBooking) {
+                        item.classList.add('bg-blue-50', 'border-blue-300');
+                    }
+                    
+                    const remaining = evt.capacity - count;
+                    const shortName = evt.name.length > 8 ? evt.name.substring(0, 7) + '...' : evt.name;
 
-                row.innerHTML = `
-                    <td class="px-4 py-3 font-medium text-slate-900">${item.dateStr}</td>
-                    <td class="px-4 py-3">${item.time}</td>
-                    <td class="px-4 py-3 text-xs text-slate-500">${item.courseName}</td>
-                    <td class="px-4 py-3 text-center font-bold">
-                        <span class="${bookingCount > 0 ? 'text-blue-600' : 'text-slate-400'}">${bookingCount}</span>
-                        <span class="text-slate-400 mx-1">/</span>
-                        <span>${item.capacity}</span>
-                    </td>
-                    <td class="px-4 py-3 text-center">${statusBadge}</td>
-                `;
-                tbody.appendChild(row);
-            });
+                    item.innerHTML = `
+                        <div class="font-bold text-slate-700">${evt.time}</div>
+                        <div class="text-slate-600 truncate" title="${evt.name}">${shortName}</div>
+                        <div class="flex justify-between items-center mt-1">
+                            <span class="font-bold ${isFull ? 'text-red-600' : 'text-slate-500'}">予約:${count}/${evt.capacity}</span>
+                            <span class="text-xs bg-white px-1 rounded border border-slate-200">残:${remaining}</span>
+                        </div>
+                    `;
+                    cell.appendChild(item);
+                });
+                
+                grid.appendChild(cell);
+            }
         }
         
         function renderAdminCourseSettings() {
