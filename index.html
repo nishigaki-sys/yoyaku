@@ -580,6 +580,10 @@
         let selectedScheduleDateStr = ""; // モーダルで開いている日付
         let editingContentId = null; // コンテンツ編集モード用
         let editingScheduleIndex = -1; // スケジュール編集モード用
+        
+        // 予約バリデーション用変数
+        let selectedStartTime = "";
+        let selectedSlotCapacity = 0;
 
         // DOM要素
         const loadingIndicator = document.getElementById('loadingIndicator');
@@ -664,6 +668,10 @@
                  });
                  if (isAdminViewVisible) {
                      renderAdminDashboard();
+                 }
+                 // 予約画面が開かれている場合、予約数の変動を反映させるため再描画
+                 if (selectedDate && timeSlotsContainer.style.display !== 'none') {
+                     renderTimeSlots(selectedDate);
                  }
              });
         };
@@ -1405,6 +1413,10 @@
                 
                 selectedContent = currentSettings.contents.find(c => c.id === contentId);
                 
+                // 選択された枠の情報を保持
+                selectedStartTime = time;
+                selectedSlotCapacity = parseInt(e.target.dataset.capacity || 0);
+
                 const formattedDate = `${selectedDate.getFullYear()}年${selectedDate.getMonth() + 1}月${selectedDate.getDate()}日`;
                 selectedSlotInfo.textContent = `${formattedDate} ${time} [${selectedContent.name}]`;
                 selectedPriceInfo.textContent = `参加費: ${Number(selectedContent.price).toLocaleString()}円`;
@@ -1422,6 +1434,24 @@
             const email = document.getElementById('email').value;
             const phone = document.getElementById('phone').value;
             
+            // クライアント側での最終定員チェック
+            const localDateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth()+1).padStart(2,'0')}-${String(selectedDate.getDate()).padStart(2,'0')}`;
+            const currentBookingsCount = allBookings.filter(b => {
+                if (!b.date) return false;
+                const bDate = new Date(b.date);
+                const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
+                return bLocalStr === localDateStr && 
+                       b.contentId === selectedContent.id && 
+                       b.startTime === selectedStartTime;
+            }).length;
+
+            if (currentBookingsCount >= selectedSlotCapacity) {
+                alert("申し訳ありません。タッチの差で満席となりました。\n恐れ入りますが、別の日程をご検討ください。");
+                // 画面をリフレッシュ
+                renderTimeSlots(selectedDate);
+                return;
+            }
+
             const bookingData = {
                 schoolName: currentSettings.schoolName,
                 schoolId: currentSettings.schoolId || "unknown",
@@ -1430,7 +1460,7 @@
                 contentId: selectedContent.id,
                 date: selectedDate.toISOString(),
                 timeString: selectedSlotInfo.textContent, // 表示用
-                startTime: selectedContent.startTime || "", // Added startTime
+                startTime: selectedStartTime, 
                 price: selectedContent.price,
                 parentName, childName, email, phone
             };
@@ -1524,7 +1554,6 @@
                 const dayEvents = currentSettings.schedule[localDateStr];
                 dayEvents.forEach(evt => {
                     const content = currentSettings.contents.find(c => c.id === evt.contentId);
-                    // 修正: evt.grades または content.grades を確認する
                     const targetGrades = evt.grades || (content ? content.grades : []) || [];
                     if (content && targetGrades.includes(selectedGrade)) {
                         availableSlots.push({ ...evt, contentName: content.name });
@@ -1541,11 +1570,35 @@
                  buttonContainer.appendChild(msg);
             } else {
                 availableSlots.forEach(slot => {
+                    // 残席計算
+                    const bookingCount = allBookings.filter(b => {
+                        if (!b.date) return false;
+                        const bDate = new Date(b.date);
+                        const bLocalStr = `${bDate.getFullYear()}-${String(bDate.getMonth()+1).padStart(2,'0')}-${String(bDate.getDate()).padStart(2,'0')}`;
+                        return bLocalStr === localDateStr && 
+                               b.contentId === slot.contentId && 
+                               b.startTime === slot.startTime;
+                    }).length;
+                    
+                    const remaining = slot.capacity - bookingCount;
+                    const isFull = remaining <= 0;
+
                     const button = document.createElement('button');
-                    button.textContent = `${slot.startTime} [${slot.contentName}] (残${slot.capacity})`;
+                    button.textContent = isFull 
+                        ? `${slot.startTime} [${slot.contentName}] (満席)` 
+                        : `${slot.startTime} [${slot.contentName}] (残${remaining})`;
+                    
                     button.dataset.time = slot.startTime;
                     button.dataset.contentid = slot.contentId;
-                    button.className = "w-full max-w-sm font-bold py-3 px-4 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition";
+                    // バリデーション用にcapacityも保存
+                    button.dataset.capacity = slot.capacity;
+
+                    if (isFull) {
+                        button.disabled = true;
+                        button.className = "w-full max-w-sm font-bold py-3 px-4 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed";
+                    } else {
+                        button.className = "w-full max-w-sm font-bold py-3 px-4 bg-teal-100 text-teal-700 rounded-lg hover:bg-teal-200 transition";
+                    }
                     buttonContainer.appendChild(button);
                 });
             }
