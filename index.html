@@ -128,12 +128,14 @@
             <!-- ヘッダー情報 -->
             <header class="text-center mb-8">
                 <div class="w-full h-48 sm:h-64 bg-teal-500 rounded-2xl mb-4 overflow-hidden shadow-lg relative group">
-                    <img src="https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=2070&auto=format&fit=crop" alt="ロボットプログラミング教室" class="w-full h-full object-cover">
+                    <!-- 画像URLを動的に設定 -->
+                    <img id="headerImage" src="https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=2070&auto=format&fit=crop" alt="ロボットプログラミング教室" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                          <p class="text-white font-bold"><span id="headerSchoolName"></span>校へようこそ</p>
                     </div>
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-teal-600"><span id="schoolNameDisplay">渋谷</span>校 体験レッスン</h1>
+                <!-- タイトルを動的に設定 -->
+                <h1 id="pageTitleDisplay" class="text-3xl sm:text-4xl font-extrabold text-teal-600">ロボットプログラミング体験教室</h1>
                 <p class="mt-2 text-slate-600">未来のクリエイター、集まれ！楽しい体験会へようこそ！</p>
                 <div id="schoolInfoDisplay" class="mt-4 text-sm text-slate-500 bg-white p-3 rounded-lg inline-block shadow-sm">
                     <!-- 住所・電話番号がここに表示されます -->
@@ -275,7 +277,6 @@
                 <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none active-tab whitespace-nowrap" data-tab="dashboard">
                     ダッシュボード
                 </button>
-                <!-- 追加: 予約管理タブ -->
                 <button class="tab-btn px-6 py-3 font-bold text-slate-500 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-500 transition-colors focus:outline-none whitespace-nowrap" data-tab="booking-management">
                     予約管理
                 </button>
@@ -367,7 +368,7 @@
                     <p class="text-xs text-slate-400 mt-2 text-right">※体験会をクリックすると予約詳細を確認できます</p>
                 </div>
 
-                <!-- 2. 予約管理 (新規追加) -->
+                <!-- 2. 予約管理 -->
                 <div id="tab-booking-management" class="tab-content hidden">
                     <h2 class="text-xl font-bold text-slate-800 mb-4 border-l-4 border-green-500 pl-3">予約申し込み一覧</h2>
                     
@@ -481,6 +482,19 @@
                         <h2 class="text-xl font-bold text-slate-800 mb-6 border-l-4 border-purple-500 pl-3">教室基本情報</h2>
                         
                         <div class="space-y-6 max-w-lg">
+                            <div class="mb-6 pb-6 border-b border-slate-200">
+                                <h3 class="text-md font-bold text-slate-700 mb-3">予約画面設定</h3>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-slate-600 mb-1">予約ページタイトル</label>
+                                    <input type="text" name="pageTitle" id="adminPageTitleInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: ロボットプログラミング体験教室">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-600 mb-1">ヘッダー画像URL</label>
+                                    <input type="text" name="headerImageUrl" id="adminHeaderImageInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="https://...">
+                                    <p class="text-xs text-slate-400 mt-1">※設定しない場合はデフォルト画像が表示されます</p>
+                                </div>
+                            </div>
+
                             <div>
                                 <label class="block text-sm font-bold text-slate-600 mb-1">教室名</label>
                                 <input type="text" name="schoolName" id="adminSchoolNameInput" class="w-full p-3 border border-slate-300 rounded focus:border-purple-500 focus:ring-1 focus:ring-purple-500" placeholder="例: 渋谷">
@@ -723,6 +737,8 @@
             schoolId: "shibuya001",
             address: "東京都渋谷区神南1-1-1",
             phoneNumber: "03-1234-5678",
+            pageTitle: "ロボットプログラミング体験教室",
+            headerImageUrl: "https://images.unsplash.com/photo-1581092921461-eab62e97a782?q=80&w=2070&auto=format&fit=crop",
             allowedIPs: "", // IP制限用
             // マスタデータ (学年設定はスケジュール側に移管)
             contents: [
@@ -759,6 +775,8 @@
         const confirmSchoolName = document.getElementById('confirmSchoolName');
         const footerSchoolName = document.getElementById('footerSchoolName');
         const schoolInfoDisplay = document.getElementById('schoolInfoDisplay');
+        const pageTitleDisplay = document.getElementById('pageTitleDisplay');
+        const headerImage = document.getElementById('headerImage');
         
         // Admin Inputs
         const adminSchoolNameInput = document.getElementById('adminSchoolNameInput');
@@ -766,6 +784,8 @@
         const adminAddressInput = document.getElementById('adminAddressInput');
         const adminPhoneInput = document.getElementById('adminPhoneInput');
         const adminAllowedIPsInput = document.getElementById('adminAllowedIPsInput');
+        const adminPageTitleInput = document.getElementById('adminPageTitleInput');
+        const adminHeaderImageInput = document.getElementById('adminHeaderImageInput');
         
         // --- Firebase Setup ---
         const initFirebase = async () => {
@@ -833,8 +853,11 @@
             onSnapshot(settingsRef, (docSnap) => {
                 if (docSnap.exists()) {
                     currentSettings = docSnap.data();
+                    // 後方互換性
                     if(!currentSettings.contents) currentSettings.contents = defaultData.contents;
                     if(!currentSettings.schedule) currentSettings.schedule = {};
+                    if(!currentSettings.pageTitle) currentSettings.pageTitle = defaultData.pageTitle;
+                    if(!currentSettings.headerImageUrl) currentSettings.headerImageUrl = defaultData.headerImageUrl;
                 } else {
                     currentSettings = defaultData;
                     if(!user.isAnonymous) {
@@ -858,7 +881,7 @@
                  });
                  if (isAdminViewVisible) {
                      renderAdminDashboard();
-                     renderBookingManagement(); // 追加
+                     renderBookingManagement();
                  }
                  // 予約画面が開かれている場合、予約数の変動を反映させるため再描画
                  if (selectedDate && timeSlotsContainer.style.display !== 'none') {
@@ -900,11 +923,22 @@
             if (!currentSettings) return;
 
             const sName = currentSettings.schoolName || "渋谷";
-            schoolNameDisplay.textContent = sName;
-            document.getElementById('headerSchoolName').textContent = sName;
-            confirmSchoolName.textContent = sName + '校';
-            footerSchoolName.textContent = sName;
-            document.title = sName + '校 体験レッスン予約';
+            if (schoolNameDisplay) schoolNameDisplay.textContent = sName;
+            
+            const headerSchoolNameEl = document.getElementById('headerSchoolName');
+            if (headerSchoolNameEl) headerSchoolNameEl.textContent = sName;
+            
+            if (confirmSchoolName) confirmSchoolName.textContent = sName + '校';
+            if (footerSchoolName) footerSchoolName.textContent = sName;
+            
+            // ヘッダー情報更新
+            if (currentSettings.pageTitle) {
+                if (pageTitleDisplay) pageTitleDisplay.textContent = currentSettings.pageTitle;
+                document.title = currentSettings.pageTitle;
+            }
+            if (currentSettings.headerImageUrl && headerImage) {
+                headerImage.src = currentSettings.headerImageUrl;
+            }
             
             const address = currentSettings.address || "";
             const phone = currentSettings.phoneNumber || "";
@@ -1018,12 +1052,12 @@
             const isEmailUser = user && !user.isAnonymous;
             if (isEmailUser) {
                 if (isAdminViewVisible) {
-                    adminBtnText.textContent = "予約画面に戻る";
+                    if(adminBtnText) adminBtnText.textContent = "予約画面に戻る";
                 } else {
-                    adminBtnText.textContent = "管理者モード";
+                    if(adminBtnText) adminBtnText.textContent = "管理者モード";
                 }
             } else {
-                adminBtnText.textContent = "管理者ログイン";
+                if(adminBtnText) adminBtnText.textContent = "管理者ログイン";
                 if (isAdminViewVisible) exitAdminMode();
             }
         }
@@ -1149,6 +1183,8 @@
             document.getElementById('adminAddressInput').value = currentSettings.address || "";
             document.getElementById('adminPhoneInput').value = currentSettings.phoneNumber || "";
             document.getElementById('adminAllowedIPsInput').value = currentSettings.allowedIPs || "";
+            document.getElementById('adminPageTitleInput').value = currentSettings.pageTitle || "";
+            document.getElementById('adminHeaderImageInput').value = currentSettings.headerImageUrl || "";
             
             // 現在のIPを表示
             getMyIP().then(ip => {
@@ -1738,7 +1774,9 @@
                 schoolId: formData.get('schoolId'),
                 address: formData.get('address'),
                 phoneNumber: formData.get('phoneNumber'),
-                allowedIPs: formData.get('allowedIPs') // IP制限
+                allowedIPs: formData.get('allowedIPs'), // IP制限
+                pageTitle: formData.get('pageTitle'),
+                headerImageUrl: formData.get('headerImageUrl')
             };
 
             await saveSettingsToFirestore(newSettings);
